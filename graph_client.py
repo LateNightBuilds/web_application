@@ -1,11 +1,9 @@
 from typing import List, Tuple
 
 import networkx as nx
-from graph.shortest_path import Dijkstra, AStar
-from graph.shortest_path.methods import ShortestPathMethod
-from graph.utils import GridCellType
-from graph.utils.history import HistoryLogger
-from graph.utils.utils import graph_to_grid, grid_to_graph
+from algorithms import Dijkstra, AStar, GridCellType, HistoryLogger
+from algorithms.graph.shortest_path.methods import ShortestPathMethod
+from algorithms.graph.utils.utils import graph_to_grid, grid_to_graph
 
 
 def run_minimum_spanning_tree():

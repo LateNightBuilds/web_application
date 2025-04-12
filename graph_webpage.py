@@ -1,11 +1,9 @@
 import json
 from typing import List, Dict
 
+from algorithms import GridCellType, HistoryLogger, grid_to_graph
+from algorithms.graph.shortest_path.methods import ShortestPathMethod
 from flask import Flask, render_template, request, jsonify
-from graph.shortest_path.methods import ShortestPathMethod
-from graph.utils import GridCellType
-from graph.utils.history import HistoryLogger
-from graph.utils.utils import grid_to_graph
 
 from graph_client import run_shortest_path, run_search
 
