@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Algorithms</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .mini-nav {
+            background-color: #1e1e1e;
+            padding: 6px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .mini-nav a {
+            color: #5ac8fa;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .mini-nav a:hover {
+            text-decoration: underline;
+        }
+        .section {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            border-bottom: 1px solid #333;
+            padding: 40px 20px;
+        }
+        .left {
+            flex: 1;
+            padding-right: 20px;
+        }
+        .right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .graph-container {
+            width: 350px;
+            height: 350px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            position: relative;
+            margin-top: 20px;
+            border: 1px solid #444;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #2c2c2e;
+            border: 2px solid #555;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .node:hover {
+            background-color: #3a3a3c;
+        }
+        .node.start {
+            background-color: #4cd964;
+            border-color: #3cc556;
+        }
+        .node.end {
+            background-color: #ff3b30;
+            border-color: #e5352b;
+        }
+        .node.visited {
+            background-color: #5ac8fa;
+            border-color: #48a4d9;
+        }
+        .node.current {
+            box-shadow: 0 0 0 3px #af52de;
+            z-index: 10;
+        }
+        .edge {
+            position: absolute;
+            background-color: #555;
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: 0;
+        }
+        .edge.visited {
+            background-color: #5ac8fa;
+        }
+        .controls {
+            display: grid;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        .controls > div {
+            display: flex;
+            flex-direction: column;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            background-color: #2c2c2e;
+            color: #e0e0e0;
+            width: 100%;
+        }
+        button:hover, select:hover {
+            background-color: #3a3a3c;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #1c1c1e;
+            color: #666;
+            cursor: not-allowed;
+        }
+        h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 14px;
+            color: #bbb;
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ff9f0a;
+        }
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 300px;
+            display: none;
+        }
+        .animation-controls button {
+            flex: 1;
+        }
+        .animation-step {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+        .predefined-section {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 300px;
+        }
+        .predefined-section select {
+            margin-bottom: 10px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mini-nav">
+        <a href="/">Home</a>
+    </div>
+
+    <div class="section">
+        <div class="left">
+            <h2>Search Algorithms</h2>
+            <p>This section allows you to visualize two fundamental graph traversal algorithms: Breadth-First Search (BFS) and Depth-First Search (DFS).</p>
+            <p><strong>Breadth-First Search (BFS)</strong> explores all neighbor nodes at the present depth before moving on to nodes at the next depth level. This makes it ideal for finding the shortest path in an unweighted graph.</p>
+            <p><strong>Depth-First Search (DFS)</strong> explores as far as possible along each branch before backtracking. It's useful for topological sorting, detecting cycles, and solving puzzles like mazes.</p>
+            <p>To get started:</p>
+            <ol>
+                <li>Select a predefined graph type from the dropdown</li>
+                <li>Choose either BFS or DFS algorithm</li>
+                <li>Click "Run" to visualize the algorithm</li>
+            </ol>
+        </div>
+        <div class="right">
+            <div class="controls">
+                <div>
+                    <label for="algorithmSelect">Select Algorithm:</label>
+                    <select id="algorithmSelect">
+                        <option value="bfs">Breadth-First Search (BFS)</option>
+                        <option value="dfs">Depth-First Search (DFS)</option>
+                    </select>
+                </div>
+                <div class="predefined-section">
+                    <label for="predefinedGraphs">Select Graph Type:</label>
+                    <select id="predefinedGraphs">
+                        <option value="">Select a graph...</option>
+                        <option value="binary-tree">Binary Tree</option>
+                        <option value="cycle">Cycle</option>
+                        <option value="complete">Complete Graph</option>
+                        <option value="disconnected">Disconnected Components</option>
+                    </select>
+                </div>
+                <div class="button-row">
+                    <button id="runBtn" onclick="runAlgorithm()" disabled>Run</button>
+                </div>
+            </div>
+            <div class="status" id="status">Select a graph type to begin</div>
+            <div class="animation-controls" id="animationControls">
+                <button id="playPauseBtn" onclick="togglePlayPause()">▶ Play</button>
+                <button id="resetAnimBtn" onclick="resetAnimation()">Reset</button>
+            </div>
+            <div class="animation-step" id="stepInfo"></div>
+            <div class="graph-container" id="graphContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const graphContainer = document.getElementById("graphContainer");
+        const statusElement = document.getElementById("status");
+        const runBtn = document.getElementById("runBtn");
+        const animationControlsElement = document.getElementById("animationControls");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const stepInfoElement = document.getElementById("stepInfo");
+        const algorithmSelector = document.getElementById("algorithmSelect");
+        const predefinedGraphsSelector = document.getElementById("predefinedGraphs");
+
+        let nodes = [];
+        let edges = [];
+        let startNode = null;
+        let endNode = null;
+        let nodeCounter = 0;
+        let animationHistory = null;
+        let animationInterval = null;
+        let currentStep = 0;
+        let isPlaying = false;
+        let animationSpeed = 1000; // 1 second per step
+
+        // Set up predefined graph selector
+        predefinedGraphsSelector.addEventListener("change", loadPredefinedGraph);
+
+        function resetGraph() {
+            resetAnimation();
+
+            // Clear all nodes and edges
+            nodes = [];
+            edges = [];
+            startNode = null;
+            endNode = null;
+            nodeCounter = 0;
+
+            // Clear DOM elements
+            while (graphContainer.firstChild) {
+                graphContainer.removeChild(graphContainer.firstChild);
+            }
+
+            updateRunButtonState();
+            animationControlsElement.style.display = 'none';
+            stepInfoElement.textContent = '';
+        }
+
+        async function runAlgorithm() {
+            if (!(startNode && endNode)) {
+                alert("Please select a graph type first.");
+                return;
+            }
+            resetAnimation();
+            const algorithm = algorithmSelector.value;
+
+            // Prepare graph data for server
+            const graphData = {
+                nodes: nodes.map(node => ({
+                    id: node.id,
+                    connections: node.connections,
+                    x: node.x,
+                    y: node.y,
+                    isStart: node.id === startNode.id,
+                    isEnd: node.id === endNode.id
+                })),
+                edges: edges
+            };
+
+            const payload = {
+                algorithm: algorithm,
+                graph: graphData
+            };
+
+            statusElement.textContent = `Running ${algorithm.toUpperCase()} algorithm...`;
+            statusElement.style.color = "#ff9f0a";
+            runBtn.disabled = true;
+
+            try {
+                const response = await fetch("/run_search", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusElement.textContent = result.message;
+                    statusElement.style.color = "#4cd964";
+                    animationHistory = result.history || {};
+
+                    if (Object.keys(animationHistory).length > 0) {
+                        statusElement.textContent = `${algorithm.toUpperCase()} completed. Showing exploration animation...`;
+                        animationControlsElement.style.display = 'flex';
+                        startAnimation();
+                    } else {
+                        statusElement.textContent = `${algorithm.toUpperCase()} completed, but no animation history was returned.`;
+                    }
+                } else {
+                    statusElement.textContent = result.message || "Unexpected error.";
+                    statusElement.style.color = "#ff3b30";
+                    alert(result.message || "Unexpected error.");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                statusElement.textContent = `Error: ${err.message}`;
+                statusElement.style.color = "#ff3b30";
+                alert("Error running algorithm: " + err.message);
+            } finally {
+                runBtn.disabled = false;
+            }
+        }
+
+        function startAnimation() {
+            currentStep = 0;
+            isPlaying = true;
+            playPauseBtn.innerHTML = "❚❚ Pause";
+            updateAnimationStep();
+            animationInterval = setInterval(advanceAnimation, animationSpeed);
+        }
+
+        function advanceAnimation() {
+            if (currentStep >= Object.keys(animationHistory).length) {
+                stopAnimation();
+                return;
+            }
+            updateAnimationStep();
+            currentStep++;
+        }
+
+        function updateAnimationStep() {
+            // Reset all node and edge classes
+            document.querySelectorAll('.node').forEach(node => {
+                if (!node.classList.contains('start') && !node.classList.contains('end')) {
+                    node.classList.remove('visited');
+                }
+                node.classList.remove('current');
+            });
+
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('visited');
+            });
+
+            // Apply visited class to nodes and edges in the history
+            for (let i = 0; i <= currentStep; i++) {
+                const step = animationHistory[i];
+                if (step) {
+                    // Handle node visits
+                    if (step.type === 'visitNode') {
+                        const nodeElement = document.getElementById(`node-${step.nodeId}`);
+                        if (nodeElement && !nodeElement.classList.contains('start') && !nodeElement.classList.contains('end')) {
+                            nodeElement.classList.add('visited');
+                        }
+                    }
+                    // Handle edge traversals
+                    else if (step.type === 'traverseEdge') {
+                        const edgeId1 = `edge-${step.fromNodeId}-${step.toNodeId}`;
+                        const edgeId2 = `edge-${step.toNodeId}-${step.fromNodeId}`;
+                        const edgeElement = document.getElementById(edgeId1) || document.getElementById(edgeId2);
+                        if (edgeElement) {
+                            edgeElement.classList.add('visited');
+                        }
+                    }
+                }
+            }
+
+            // Highlight current node
+            const currentNodeStep = animationHistory[currentStep];
+            if (currentNodeStep && currentNodeStep.type === 'visitNode') {
+                const nodeElement = document.getElementById(`node-${currentNodeStep.nodeId}`);
+                if (nodeElement) {
+                    nodeElement.classList.add('current');
+                }
+                stepInfoElement.textContent = `Step ${currentStep}: Visiting node ${currentNodeStep.nodeId}`;
+            } else if (currentNodeStep && currentNodeStep.type === 'traverseEdge') {
+                stepInfoElement.textContent = `Step ${currentStep}: Moving from node ${currentNodeStep.fromNodeId} to ${currentNodeStep.toNodeId}`;
+            }
+        }
+
+        function togglePlayPause() {
+            if (isPlaying) {
+                clearInterval(animationInterval);
+                playPauseBtn.innerHTML = "▶ Play";
+            } else {
+                animationInterval = setInterval(advanceAnimation, animationSpeed);
+                playPauseBtn.innerHTML = "❚❚ Pause";
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function stopAnimation() {
+            clearInterval(animationInterval);
+            isPlaying = false;
+            playPauseBtn.innerHTML = "▶ Replay";
+            statusElement.textContent = "Animation complete";
+        }
+
+        function resetAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+            document.querySelectorAll('.node').forEach(node => {
+                if (!node.classList.contains('start') && !node.classList.contains('end')) {
+                    node.classList.remove('visited');
+                }
+                node.classList.remove('current');
+            });
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('visited');
+            });
+            currentStep = 0;
+            isPlaying = false;
+            animationHistory = null;
+            playPauseBtn.innerHTML = "▶ Play";
+            stepInfoElement.textContent = '';
+        }
+
+        function loadPredefinedGraph(event) {
+            const graphType = event.target.value;
+            if (!graphType) return;
+
+            resetGraph();
+
+            switch(graphType) {
+                case 'binary-tree':
+                    createBinaryTreeGraph();
+                    break;
+                case 'cycle':
+                    createCycleGraph();
+                    break;
+                case 'complete':
+                    createCompleteGraph();
+                    break;
+                case 'disconnected':
+                    createDisconnectedGraph();
+                    break;
+            }
+
+            updateRunButtonState();
+        }
+
+        function updateRunButtonState() {
+            const hasStart = startNode !== null;
+            const hasEnd = endNode !== null;
+
+            if (hasStart && hasEnd) {
+                runBtn.disabled = false;
+                statusElement.textContent = "Ready to run algorithm";
+                statusElement.style.color = "#4cd964";
+            } else {
+                runBtn.disabled = true;
+                statusElement.textContent = "Select a graph type to begin";
+                statusElement.style.color = "#ff9f0a";
+            }
+        }
+
+        function createBinaryTreeGraph() {
+            // Create root node
+            const rootX = 175;
+            const rootY = 50;
+            addNodeAt(rootX, rootY);
+
+            // Level 1
+            const l1x1 = 100;
+            const l1x2 = 250;
+            const l1y = 120;
+            addNodeAt(l1x1, l1y);
+            addNodeAt(l1x2, l1y);
+
+            // Level 2
+            const l2x1 = 50;
+            const l2x2 = 150;
+            const l2x3 = 200;
+            const l2x4 = 300;
+            const l2y = 190;
+            addNodeAt(l2x1, l2y);
+            addNodeAt(l2x2, l2y);
+            addNodeAt(l2x3, l2y);
+            addNodeAt(l2x4, l2y);
+
+            // Level 3
+            const l3x1 = 25;
+            const l3y = 260;
+            addNodeAt(l3x1, l3y);
+
+            // Connect nodes to form a binary tree
+            connectNodesByIndices(0, 1);
+            connectNodesByIndices(0, 2);
+            connectNodesByIndices(1, 3);
+            connectNodesByIndices(1, 4);
+            connectNodesByIndices(2, 5);
+            connectNodesByIndices(2, 6);
+            connectNodesByIndices(3, 7);
+
+            // Set start and end nodes
+            setNodeAsStart(0);
+            setNodeAsEnd(7);
+        }
+
+        function createCycleGraph() {
+            // Create nodes in a circle
+            const centerX = 175;
+            const centerY = 175;
+            const radius = 120;
+            const nodeCount = 8;
+
+            for (let i = 0; i < nodeCount; i++) {
+                const angle = (i / nodeCount) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                addNodeAt(x, y);
+            }
+
+            // Connect nodes in a cycle
+            for (let i = 0; i < nodeCount; i++) {
+                connectNodesByIndices(i, (i + 1) % nodeCount);
+            }
+
+            // Set start and end nodes
+            setNodeAsStart(0);
+            setNodeAsEnd(4);
+        }
+
+        function createCompleteGraph() {
+            // Create nodes in a circle
+            const centerX = 175;
+            const centerY = 175;
+            const radius = 120;
+            const nodeCount = 6;
+
+            for (let i = 0; i < nodeCount; i++) {
+                const angle = (i / nodeCount) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                addNodeAt(x, y);
+            }
+
+            // Connect all nodes to each other
+            for (let i = 0; i < nodeCount; i++) {
+                for (let j = i + 1; j < nodeCount; j++) {
+                    connectNodesByIndices(i, j);
+                }
+            }
+
+            // Set start and end nodes
+            setNodeAsStart(0);
+            setNodeAsEnd(3);
+        }
+
+        function createDisconnectedGraph() {
+            // Component 1
+            addNodeAt(80, 80);
+            addNodeAt(80, 150);
+            addNodeAt(150, 80);
+            connectNodesByIndices(0, 1);
+            connectNodesByIndices(0, 2);
+            connectNodesByIndices(1, 2);
+
+            // Component 2
+            addNodeAt(250, 200);
+            addNodeAt(250, 270);
+            addNodeAt(320, 235);
+            connectNodesByIndices(3, 4);
+            connectNodesByIndices(3, 5);
+            connectNodesByIndices(4, 5);
+
+            // Set start and end nodes
+            setNodeAsStart(0);
+            setNodeAsEnd(5);
+        }
+
+        function addNodeAt(x, y) {
+            // Check bounds
+            x = Math.max(20, Math.min(x, graphContainer.clientWidth - 20));
+            y = Math.max(20, Math.min(y, graphContainer.clientHeight - 20));
+
+            // Create new node
+            const nodeId = nodeCounter++;
+            const node = {
+                id: nodeId,
+                x: x,
+                y: y,
+                connections: []
+            };
+
+            nodes.push(node);
+
+            // Create DOM element for node
+            const nodeElement = document.createElement("div");
+            nodeElement.id = `node-${nodeId}`;
+            nodeElement.className = "node";
+            nodeElement.style.left = `${x - 20}px`; // Center the node
+            nodeElement.style.top = `${y - 20}px`;
+            nodeElement.textContent = nodeId;
+
+            graphContainer.appendChild(nodeElement);
+            return node;
+        }
+
+        function connectNodesByIndices(index1, index2) {
+            if (index1 >= nodes.length || index2 >= nodes.length) return;
+            createEdge(nodes[index1], nodes[index2]);
+        }
+
+        function createEdge(node1, node2) {
+            // Check if edge already exists
+            if (node1.connections.includes(node2.id) || node2.connections.includes(node1.id)) {
+                return;
+            }
+
+            // Add connection to both nodes
+            node1.connections.push(node2.id);
+            node2.connections.push(node1.id);
+
+            // Create edge object
+            const edgeId = `edge-${node1.id}-${node2.id}`;
+            const edge = {
+                id: edgeId,
+                node1: node1.id,
+                node2: node2.id
+            };
+
+            edges.push(edge);
+
+            // Create DOM element for edge
+            drawEdge(edge);
+        }
+
+        function drawEdge(edge) {
+            const node1 = nodes.find(n => n.id === edge.node1);
+            const node2 = nodes.find(n => n.id === edge.node2);
+
+            // Calculate edge position and length
+            const dx = node2.x - node1.x;
+            const dy = node2.y - node1.y;
+            const length = Math.sqrt(dx*dx + dy*dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            // Create edge element
+            const edgeElement = document.createElement("div");
+            edgeElement.id = edge.id;
+            edgeElement.className = "edge";
+            edgeElement.style.width = `${length}px`;
+            edgeElement.style.left = `${node1.x}px`;
+            edgeElement.style.top = `${node1.y}px`;
+            edgeElement.style.transform = `rotate(${angle}deg)`;
+
+            graphContainer.appendChild(edgeElement);
+
+            // Ensure edges are behind nodes
+            repositionElements();
+        }
+
+        function repositionElements() {
+            // Move all edges to the back
+            document.querySelectorAll(".edge").forEach(el => {
+                graphContainer.insertBefore(el, graphContainer.firstChild);
+            });
+        }
+
+        function setNodeAsStart(index) {
+            if (index >= nodes.length) return;
+            setStartNode(nodes[index]);
+        }
+
+        function setNodeAsEnd(index) {
+            if (index >= nodes.length) return;
+            setEndNode(nodes[index]);
+        }
+
+        function setStartNode(node) {
+            // Remove previous start node
+            if (startNode !== null) {
+                document.getElementById(`node-${startNode.id}`).classList.remove("start");
+            }
+
+            // Set new start node
+            startNode = node;
+            document.getElementById(`node-${node.id}`).classList.add("start");
+        }
+
+        function setEndNode(node) {
+            // Remove previous end node
+            if (endNode !== null) {
+                document.getElementById(`node-${endNode.id}`).classList.remove("end");
+            }
+
+            // Set new end node
+            endNode = node;
+            document.getElementById(`node-${node.id}`).classList.add("end");
+        }
+    </script>
+</body>
+</html>

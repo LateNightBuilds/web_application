@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shortest Path Grid</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .mini-nav {
+            background-color: #1e1e1e;
+            padding: 6px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .mini-nav a {
+            color: #5ac8fa;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .mini-nav a:hover {
+            text-decoration: underline;
+        }
+        .section {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            border-bottom: 1px solid #333;
+            padding: 40px 20px;
+        }
+        .left {
+            flex: 1;
+            padding-right: 20px;
+        }
+        .right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 4px;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .start { background-color: #4cd964; }
+        .end { background-color: #ff3b30; }
+        .block { background-color: #636366; }
+        .obstacle { background-color: #ff9500; }
+        .open_path { background-color: #2c2c2e; }
+        .path { background-color: #5ac8fa; }
+        .exploring {
+            box-shadow: 0 0 0 3px #af52de;
+            z-index: 10;
+        }
+        .step-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        .controls {
+            display: grid;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        .controls > div {
+            display: flex;
+            flex-direction: column;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            background-color: #2c2c2e;
+            color: #e0e0e0;
+            width: 100%;
+        }
+        button:hover, select:hover {
+            background-color: #3a3a3c;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #1c1c1e;
+            color: #666;
+            cursor: not-allowed;
+        }
+        h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 14px;
+            color: #bbb;
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ff9f0a;
+        }
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 300px;
+            display: none;
+        }
+        .animation-controls button {
+            flex: 1;
+        }
+        .animation-step {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mini-nav">
+        <a href="/">Home</a>
+    </div>
+
+    <div class="section">
+        <div class="left">
+            <h2>Shortest Path Grid</h2>
+            <p>This section allows you to build a custom grid and place elements like start, end, blocks, and obstacles. Once placed, these bricks can be used to run shortest path algorithms such as Dijkstra and A*.</p>
+        </div>
+        <div class="right">
+            <div class="controls">
+                <div>
+                    <label for="brickType">Select Brick:</label>
+                    <select id="brickType">
+                        <option value="start">Start</option>
+                        <option value="end">End</option>
+                        <option value="block">Block</option>
+                        <option value="obstacle">Obstacle</option>
+                        <option value="open_path">Open Path</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="algorithmSelect">Select Algorithm:</label>
+                    <select id="algorithmSelect">
+                        <option value="dijkstra">Dijkstra</option>
+                        <option value="a_star">A*</option>
+                    </select>
+                </div>
+
+                <div class="button-row">
+                    <button onclick="resetGrid()">Reset Grid</button>
+                    <button id="runBtn" onclick="runAlgorithm()" disabled>Run</button>
+                </div>
+            </div>
+            <div class="status" id="status">Place start and end bricks to enable Run button</div>
+
+            <div class="animation-controls" id="animationControls">
+                <button id="playPauseBtn" onclick="togglePlayPause()">▶ Play</button>
+                <button id="resetAnimBtn" onclick="resetAnimation()">Reset</button>
+            </div>
+            <div class="animation-step" id="stepInfo"></div>
+
+            <div class="grid" id="grid"></div>
+        </div>
+    </div>
+
+    <script>
+        const gridElement = document.getElementById("grid");
+        const brickSelector = document.getElementById("brickType");
+        const algorithmSelector = document.getElementById("algorithmSelect");
+        const runBtn = document.getElementById("runBtn");
+        const statusElement = document.getElementById("status");
+        const animationControlsElement = document.getElementById("animationControls");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const stepInfoElement = document.getElementById("stepInfo");
+
+        let placedStart = null;
+        let placedEnd = null;
+        let pathHistory = null;
+        let animationInterval = null;
+        let currentStep = 0;
+        let isPlaying = false;
+        let animationSpeed = 1000; // 1 second per step
+
+        function createGrid() {
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const cell = document.createElement("div");
+                    cell.className = "cell open_path";
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.dataset.type = 'open_path';
+                    cell.addEventListener("click", onCellClick);
+                    gridElement.appendChild(cell);
+                }
+            }
+            // Set initial status
+            updateRunButtonState();
+        }
+
+        function updateRunButtonState() {
+            const hasStart = placedStart !== null;
+            const hasEnd = placedEnd !== null;
+
+            if (hasStart && hasEnd) {
+                runBtn.disabled = false;
+                statusElement.textContent = "Ready to run algorithm";
+                statusElement.style.color = "#4cd964";
+            } else {
+                runBtn.disabled = true;
+                let missingItems = [];
+                if (!hasStart) missingItems.push("start");
+                if (!hasEnd) missingItems.push("end");
+                statusElement.textContent = `Missing: ${missingItems.join(" and ")} brick${missingItems.length > 1 ? 's' : ''}`;
+                statusElement.style.color = "#ff9f0a";
+            }
+        }
+
+        function clearPrevious(type) {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                if (cell.dataset.type === type) {
+                    cell.className = 'cell open_path';
+                    cell.dataset.type = 'open_path';
+                }
+            });
+        }
+
+        function onCellClick(event) {
+            // If animation is in progress, disable cell clicking
+            if (pathHistory) return;
+
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            const type = brickSelector.value;
+
+            if (type === 'start') {
+                clearPrevious('start');
+                placedStart = { row, col };
+            } else if (type === 'end') {
+                clearPrevious('end');
+                placedEnd = { row, col };
+            } else if (type === 'open_path') {
+                if (cell.dataset.type === 'start') placedStart = null;
+                if (cell.dataset.type === 'end') placedEnd = null;
+            }
+
+            cell.className = `cell ${type}`;
+            cell.dataset.type = type;
+
+            updateRunButtonState();
+        }
+
+        function resetGrid() {
+            // Stop any ongoing animation
+            resetAnimation();
+
+            document.querySelectorAll(".cell").forEach(cell => {
+                cell.className = "cell open_path";
+                cell.dataset.type = 'open_path';
+                // Remove any step numbers
+                const stepNumber = cell.querySelector('.step-number');
+                if (stepNumber) {
+                    cell.removeChild(stepNumber);
+                }
+            });
+
+            placedStart = null;
+            placedEnd = null;
+            updateRunButtonState();
+
+            // Hide animation controls
+            animationControlsElement.style.display = 'none';
+            stepInfoElement.textContent = '';
+        }
+
+        async function runAlgorithm() {
+            if (!(placedStart && placedEnd)) {
+                alert("Start and End bricks must be placed before running the algorithm.");
+                return;
+            }
+
+            // Reset any previous animation
+            resetAnimation();
+
+            const algorithm = algorithmSelector.value;
+
+            // Create a flat array of grid cell data
+            const gridData = [];
+            document.querySelectorAll(".cell").forEach(cell => {
+                gridData.push({
+                    row: parseInt(cell.dataset.row),
+                    col: parseInt(cell.dataset.col),
+                    type: cell.dataset.type
+                });
+            });
+
+            const payload = {
+                algorithm: algorithm,
+                grid: gridData
+            };
+
+            statusElement.textContent = `Running ${algorithm} algorithm...`;
+            statusElement.style.color = "#ff9f0a";
+            runBtn.disabled = true;
+
+            try {
+                const response = await fetch("/run_algorithm", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusElement.textContent = result.message;
+                    statusElement.style.color = "#4cd964";
+
+                    // Store the path history and start the animation
+                    pathHistory = result.history || {};
+
+                    if (Object.keys(pathHistory).length > 0) {
+                        statusElement.textContent = `${algorithm} completed. Showing exploration animation...`;
+                        animationControlsElement.style.display = 'flex';
+                        startAnimation();
+                    } else {
+                        statusElement.textContent = `${algorithm} completed, but no path history was returned.`;
+                    }
+                } else {
+                    statusElement.textContent = result.message || "Unexpected error.";
+                    statusElement.style.color = "#ff3b30";
+                    alert(result.message || "Unexpected error.");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                statusElement.textContent = `Error: ${err.message}`;
+                statusElement.style.color = "#ff3b30";
+                alert("Error running algorithm: " + err.message);
+            } finally {
+                runBtn.disabled = !(placedStart && placedEnd);
+            }
+        }
+
+        function startAnimation() {
+            currentStep = 0;
+            isPlaying = true;
+            playPauseBtn.innerHTML = "❚❚ Pause";
+            updateAnimationStep();
+            animationInterval = setInterval(advanceAnimation, animationSpeed);
+        }
+
+        function advanceAnimation() {
+            if (currentStep >= Object.keys(pathHistory).length) {
+                // Animation complete
+                stopAnimation();
+                return;
+            }
+
+            // Update the grid with the current step
+            updateAnimationStep();
+            currentStep++;
+        }
+
+        function updateAnimationStep() {
+            // Clear previous exploration markers
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('exploring');
+                cell.classList.remove('path');
+            });
+
+            // Show all previous steps as path
+            for (let i = 0; i < currentStep; i++) {
+                const node = pathHistory[i];
+                if (node) {
+                    const row = node[0];
+                    const col = node[1];
+                    const cell = getCellAt(row, col);
+
+                    // Skip coloring start and end cells
+                    if (cell.dataset.type !== 'start' && cell.dataset.type !== 'end') {
+                        cell.classList.add('path');
+                    }
+
+                    // Add the step number if not already present
+                    if (!cell.querySelector('.step-number')) {
+                        const stepNumberElement = document.createElement('div');
+                        stepNumberElement.className = 'step-number';
+                        stepNumberElement.textContent = i;
+                        cell.appendChild(stepNumberElement);
+                    }
+                }
+            }
+
+            // Show current exploration
+            const currentNode = pathHistory[currentStep];
+            if (currentNode) {
+                const row = currentNode[0];
+                const col = currentNode[1];
+                const cell = getCellAt(row, col);
+                cell.classList.add('exploring');
+
+                stepInfoElement.textContent = `Step ${currentStep}: Exploring (${row}, ${col})`;
+            }
+        }
+
+        function getCellAt(row, col) {
+            return document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        }
+
+        function togglePlayPause() {
+            if (isPlaying) {
+                // Pause
+                clearInterval(animationInterval);
+                playPauseBtn.innerHTML = "▶ Play";
+            } else {
+                // Play/resume
+                animationInterval = setInterval(advanceAnimation, animationSpeed);
+                playPauseBtn.innerHTML = "❚❚ Pause";
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function stopAnimation() {
+            clearInterval(animationInterval);
+            isPlaying = false;
+            playPauseBtn.innerHTML = "▶ Replay";
+            statusElement.textContent = "Animation complete";
+        }
+
+        function resetAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+
+            // Clear any visualization
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('exploring');
+                cell.classList.remove('path');
+
+                // Remove step numbers
+                const stepNumber = cell.querySelector('.step-number');
+                if (stepNumber) {
+                    cell.removeChild(stepNumber);
+                }
+            });
+
+            currentStep = 0;
+            isPlaying = false;
+            pathHistory = null;
+            playPauseBtn.innerHTML = "▶ Play";
+            stepInfoElement.textContent = '';
+        }
+
+        createGrid();
+    </script>
+</body>
+</html>
