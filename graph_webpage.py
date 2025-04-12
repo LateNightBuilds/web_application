@@ -4,12 +4,14 @@ from typing import List, Dict
 import networkx as nx
 from algorithms.graph.search.methods import SearchMethod
 from algorithms.graph.shortest_path.methods import ShortestPathMethod
+from algorithms.graph.minimum_spanning_tree.methods import MinimumSpanningTreeMethod
+from algorithms.graph.minimum_spanning_tree.prim_algorithm import PrimAlgorithm
 from algorithms.graph.utils.definitions import GridCellType
 from algorithms.graph.utils.history import HistoryLogger
 from algorithms.graph.utils.utils import grid_to_graph
 from flask import Flask, render_template, request, jsonify
 
-from graph_client import run_shortest_path, run_search
+from graph_client import run_shortest_path, run_search, run_minimum_spanning_tree  # Add run_mst import
 
 app = Flask(__name__)
 
@@ -37,6 +39,11 @@ def grid_page():
 @app.route('/search')
 def search_page():
     return render_template('search.html')
+
+
+@app.route('/minimum_spanning_tree')
+def mst_page():
+    return render_template('minimum_spanning_tree.html')  # Add route for MST page
 
 
 @app.route('/update', methods=['POST'])
@@ -160,6 +167,48 @@ def handle_search_algorithm():
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
+@app.route('/run_mst', methods=['POST'])
+def handle_mst_algorithm():
+    try:
+        data = request.get_json()
+        algorithm_name = data['algorithm']
+        graph_data = data['graph']
+
+        graph = convert_graph_data_to_graph_with_weights(graph_data=graph_data)
+
+        method = convert_algorithm_name_to_algorithm_method(algorithm_name=algorithm_name)
+
+        mst_result, history = run_minimum_spanning_tree(g=graph, method=method)
+
+        total_weight = sum(weight for _, _, weight in mst_result)
+
+        formatted_history = format_mst_history_for_frontend(history)
+
+        # Create the result object to save
+        result_data = {
+            'algorithm': algorithm_name,
+            'graph': graph_data,
+            'history': formatted_history,
+            'total_weight': total_weight,
+            'mst_edges': mst_result
+        }
+
+        # Save the MST data as JSON for future reference
+        with open('mst_data.json', 'w') as f:
+            json.dump(result_data, f, indent=2)
+
+        return jsonify({
+            "message": f"MST Algorithm {algorithm_name} completed successfully.",
+            "history": formatted_history,
+            "total_weight": total_weight,
+            "mst_edges": list(mst_result)
+        })
+
+    except Exception as e:
+        print(f"Error in run_mst_algorithm: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
 def format_history_for_frontend(history: HistoryLogger) -> Dict[int, List[int]]:
     """Convert history to a format suitable for the frontend."""
     formatted_history = {}
@@ -177,6 +226,21 @@ def format_history_for_frontend(history: HistoryLogger) -> Dict[int, List[int]]:
                 formatted_history[step] = [node[0], node[1]] if hasattr(node, '__getitem__') else [0, 0]
             except (TypeError, IndexError):
                 formatted_history[step] = [0, 0]  # Default fallback
+
+    return formatted_history
+
+
+def format_mst_history_for_frontend(history: HistoryLogger) -> Dict[int, List[int]]:
+    """Convert MST history to a format suitable for the frontend."""
+    # This function might need to be adjusted based on the exact history format
+    formatted_history = {}
+
+    # You might want to track edge additions, node selections, etc.
+    for step, entry in history.history_dict.items():
+        if isinstance(entry, tuple) and len(entry) >= 2:
+            formatted_history[step] = [entry[0], entry[1]]
+        else:
+            formatted_history[step] = [0, 0]
 
     return formatted_history
 
@@ -199,7 +263,7 @@ def convert_html_cell_type_to_grid_cell_type(html_grid: List[Dict]) -> List[List
     return processed_grid
 
 
-def convert_graph_data_to_graph(graph_data: Dict) -> nx.Graph:
+def convert_graph_data_to_graph(graph_data: Dict) -> nx.DiGraph:
     graph = nx.DiGraph()
 
     [graph.add_edge(u_of_edge=edge['node1'],
@@ -208,17 +272,44 @@ def convert_graph_data_to_graph(graph_data: Dict) -> nx.Graph:
     return graph
 
 
-def convert_algorithm_name_to_algorithm_method(algorithm_name: str) -> (ShortestPathMethod |
-                                                                        SearchMethod |
-                                                                        None):
-    if algorithm_name == 'dijkstra':
-        return ShortestPathMethod.DIJKSTRA
-    elif algorithm_name == 'a_star':
-        return ShortestPathMethod.A_STAR
-    elif algorithm_name == 'bfs':
-        return SearchMethod.BFS
-    elif algorithm_name == 'dfs':
-        return SearchMethod.DFS
+def convert_graph_data_to_graph_with_weights(graph_data: Dict) -> nx.Graph:
+    """
+    Convert frontend graph data to a networkx graph with edge weights
+    Expected input format:
+    {
+        'nodes': [{'id': node_id, 'x': x, 'y': y}, ...],
+        'edges': [{'node1': source, 'node2': target, 'weight': weight}, ...]
+    }
+    """
+    graph = nx.Graph()
+
+    # Add nodes
+    [graph.add_node(node['id']) for node in graph_data['nodes']]
+
+    # Add weighted edges
+    [graph.add_edge(u_of_edge=edge['node1'],
+                    v_of_edge=edge['node2'],
+                    weight=edge.get('weight', 1)) for edge in graph_data['edges']]
+
+    return graph
+
+
+def convert_algorithm_name_to_algorithm_method(algorithm_name: str):
+    """Convert algorithm name to corresponding method enum"""
+    algorithm_map = {
+        # Shortest Path Algorithms
+        'dijkstra': ShortestPathMethod.DIJKSTRA,
+        'a_star': ShortestPathMethod.A_STAR,
+
+        # Search Algorithms
+        'bfs': SearchMethod.BFS,
+        'dfs': SearchMethod.DFS,
+
+        # MST Algorithms
+        'prims': MinimumSpanningTreeMethod.PRIM
+    }
+
+    return algorithm_map.get(algorithm_name)
 
 
 if __name__ == '__main__':

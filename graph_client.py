@@ -1,20 +1,29 @@
 from typing import List, Tuple
 
 import networkx as nx
+from algorithms.graph.minimum_spanning_tree.prim_algorithm import PrimAlgorithm
 from algorithms.graph.search.breadth_first_search import BreadthFirstSearch
 from algorithms.graph.search.depth_first_search import DepthFirstSearch
 from algorithms.graph.search.methods import SearchMethod
 from algorithms.graph.shortest_path.a_star import AStar
 from algorithms.graph.shortest_path.dijkstra import Dijkstra
 from algorithms.graph.shortest_path.methods import ShortestPathMethod
+from algorithms.graph.minimum_spanning_tree.methods import MinimumSpanningTreeMethod
 from algorithms.graph.utils.definitions import GridCellType
 from algorithms.graph.utils.history import HistoryLogger
 from algorithms.graph.utils.utils import graph_to_grid, grid_to_graph
 
 
-def run_minimum_spanning_tree():
-    pass
+def run_minimum_spanning_tree(g: nx.Graph, method: MinimumSpanningTreeMethod):
 
+    mst = None
+    if method == MinimumSpanningTreeMethod.PRIM:
+        mst = PrimAlgorithm(graph=g)
+
+    if not mst:
+        raise ValueError('Not Implemented')
+
+    return mst.run()
 
 def run_shortest_path(g: nx.Graph, method: ShortestPathMethod) -> Tuple[int, HistoryLogger]:
     maze: List[List[GridCellType]] = graph_to_grid(graph=g)

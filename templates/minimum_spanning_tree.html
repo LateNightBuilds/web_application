@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Minimum Spanning Tree Algorithms</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .mini-nav {
+            background-color: #1e1e1e;
+            padding: 6px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .mini-nav a {
+            color: #5ac8fa;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .mini-nav a:hover {
+            text-decoration: underline;
+        }
+        .section {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            border-bottom: 1px solid #333;
+            padding: 40px 20px;
+        }
+        .left {
+            flex: 1;
+            padding-right: 20px;
+        }
+        .right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .graph-container {
+            width: 350px;
+            height: 350px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            position: relative;
+            margin-top: 20px;
+            border: 1px solid #444;
+        }
+        .node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #2c2c2e;
+            border: 2px solid #555;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .node:hover {
+            background-color: #3a3a3c;
+        }
+        .edge {
+            position: absolute;
+            background-color: #555;
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .edge.mst {
+            background-color: #5ac8fa;
+            z-index: 5;
+        }
+        .edge-weight {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .controls {
+            display: grid;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        .controls > div {
+            display: flex;
+            flex-direction: column;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            background-color: #2c2c2e;
+            color: #e0e0e0;
+            width: 100%;
+        }
+        button:hover, select:hover {
+            background-color: #3a3a3c;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #1c1c1e;
+            color: #666;
+            cursor: not-allowed;
+        }
+        h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 14px;
+            color: #bbb;
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ff9f0a;
+        }
+        .total-weight {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #5ac8fa;
+        }
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 300px;
+            display: none;
+        }
+        .animation-controls button {
+            flex: 1;
+        }
+        .animation-step {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mini-nav">
+        <a href="/">Home</a>
+    </div>
+
+    <div class="section">
+        <div class="left">
+            <h2>Minimum Spanning Tree Algorithms</h2>
+            <p>This section visualizes two fundamental Minimum Spanning Tree (MST) algorithms: Prim's and Kruskal's.</p>
+            <p><strong>Prim's Algorithm</strong> builds the MST by growing a single tree. It starts from an arbitrary node and adds the minimum weight edge that connects the tree to a new vertex.</p>
+            <p><strong>Kruskal's Algorithm</strong> builds the MST by adding edges in order of increasing weight, avoiding cycles by using a disjoint-set data structure.</p>
+            <p>To get started:</p>
+            <ol>
+                <li>Select a predefined graph type from the dropdown</li>
+                <li>Choose either Prim's or Kruskal's algorithm</li>
+                <li>Click "Run" to visualize the MST algorithm</li>
+            </ol>
+        </div>
+        <div class="right">
+            <div class="controls">
+                <div>
+                    <label for="algorithmSelect">Select Algorithm:</label>
+                    <select id="algorithmSelect">
+                        <option value="prims">Prim's Algorithm</option>
+                        <option value="kruskals">Kruskal's Algorithm</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="predefinedGraphs">Select Graph Type:</label>
+                    <select id="predefinedGraphs">
+                        <option value="">Select a graph...</option>
+                        <option value="hexagon">Hexagon Network</option>
+                    </select>
+                </div>
+                <div class="button-row">
+                    <button id="runBtn" onclick="runAlgorithm()" disabled>Run</button>
+                </div>
+            </div>
+            <div class="status" id="status">Select a graph type to begin</div>
+            <div class="total-weight" id="totalWeight"></div>
+            <div class="animation-controls" id="animationControls">
+                <button id="playPauseBtn" onclick="togglePlayPause()">▶ Play</button>
+                <button id="resetAnimBtn" onclick="resetAnimation()">Reset</button>
+            </div>
+            <div class="animation-step" id="stepInfo"></div>
+            <div class="graph-container" id="graphContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const graphContainer = document.getElementById("graphContainer");
+        const statusElement = document.getElementById("status");
+        const totalWeightElement = document.getElementById("totalWeight");
+        const runBtn = document.getElementById("runBtn");
+        const animationControlsElement = document.getElementById("animationControls");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const stepInfoElement = document.getElementById("stepInfo");
+        const algorithmSelector = document.getElementById("algorithmSelect");
+        const predefinedGraphsSelector = document.getElementById("predefinedGraphs");
+
+        let nodes = [];
+        let edges = [];
+        let nodeCounter = 0;
+        let animationHistory = null;
+        let animationInterval = null;
+        let currentStep = 0;
+        let isPlaying = false;
+        let animationSpeed = 1000; // 1 second per step
+        let mstEdges = []; // To store final MST edges
+
+        // Set up predefined graph selector
+        predefinedGraphsSelector.addEventListener("change", loadPredefinedGraph);
+
+        function resetGraph() {
+            resetAnimation();
+
+            // Clear all nodes and edges
+            nodes = [];
+            edges = [];
+            nodeCounter = 0;
+            mstEdges = [];
+
+            // Clear DOM elements
+            while (graphContainer.firstChild) {
+                graphContainer.removeChild(graphContainer.firstChild);
+            }
+
+            updateRunButtonState();
+            animationControlsElement.style.display = 'none';
+            stepInfoElement.textContent = '';
+            totalWeightElement.textContent = '';
+        }
+
+        function updateRunButtonState() {
+            runBtn.disabled = nodes.length === 0;
+
+            if (nodes.length === 0) {
+                statusElement.textContent = "Select a graph type to begin";
+                statusElement.style.color = "#ff9f0a";
+            } else {
+                statusElement.textContent = "Ready to run algorithm";
+                statusElement.style.color = "#4cd964";
+            }
+        }
+
+        function loadPredefinedGraph(event) {
+            const graphType = event.target.value;
+            if (!graphType) return;
+
+            resetGraph();
+
+            switch(graphType) {
+                case 'triangle':
+                    createTriangleGraph();
+                    break;
+                case 'hexagon':
+                    createHexagonGraph();
+                    break;
+                case 'complete':
+                    createCompleteGraph();
+                    break;
+            }
+
+            updateRunButtonState();
+        }
+
+        function createTriangleGraph() {
+            // Create nodes in a triangle formation
+            const centerX = 175;
+            const centerY = 175;
+            const radius = 120;
+
+            // Create 3 nodes
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                addNodeAt(x, y);
+            }
+
+            // Add weighted edges between the nodes
+            createWeightedEdge(nodes[0], nodes[1], 4);
+            createWeightedEdge(nodes[1], nodes[2], 5);
+            createWeightedEdge(nodes[2], nodes[0], 3);
+        }
+
+        function createHexagonGraph() {
+            // Create nodes in a hexagon formation
+            const centerX = 175;
+            const centerY = 175;
+            const radius = 120;
+
+            // Create 6 nodes
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                addNodeAt(x, y);
+            }
+
+            // Add weighted edges to create a connected graph
+            createWeightedEdge(nodes[0], nodes[1], 4);
+            createWeightedEdge(nodes[1], nodes[2], 3);
+            createWeightedEdge(nodes[2], nodes[3], 5);
+            createWeightedEdge(nodes[3], nodes[4], 2);
+            createWeightedEdge(nodes[4], nodes[5], 6);
+            createWeightedEdge(nodes[5], nodes[0], 1);
+            createWeightedEdge(nodes[0], nodes[3], 7);
+            createWeightedEdge(nodes[1], nodes[4], 8);
+            createWeightedEdge(nodes[2], nodes[5], 9);
+        }
+
+        function createCompleteGraph() {
+            // Create nodes in a circle
+            const centerX = 175;
+            const centerY = 175;
+            const radius = 120;
+            const nodeCount = 6;
+
+            // Create nodes
+            for (let i = 0; i < nodeCount; i++) {
+                const angle = (i / nodeCount) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                addNodeAt(x, y);
+            }
+
+            // Connect all nodes with varying weights
+            for (let i = 0; i < nodeCount; i++) {
+                for (let j = i + 1; j < nodeCount; j++) {
+                    createWeightedEdge(nodes[i], nodes[j], Math.floor(Math.random() * 10) + 1);
+                }
+            }
+        }
+
+        function addNodeAt(x, y) {
+            // Check bounds
+            x = Math.max(20, Math.min(x, graphContainer.clientWidth - 20));
+            y = Math.max(20, Math.min(y, graphContainer.clientHeight - 20));
+
+            // Create new node
+            const nodeId = nodeCounter++;
+            const node = {
+                id: nodeId,
+                x: x,
+                y: y
+            };
+
+            nodes.push(node);
+
+            // Create DOM element for node
+            const nodeElement = document.createElement("div");
+            nodeElement.id = `node-${nodeId}`;
+            nodeElement.className = "node";
+            nodeElement.style.left = `${x - 20}px`; // Center the node
+            nodeElement.style.top = `${y - 20}px`;
+            nodeElement.textContent = nodeId;
+
+            graphContainer.appendChild(nodeElement);
+            return node;
+        }
+
+        function createWeightedEdge(fromNode, toNode, weight) {
+            // Check if edge already exists
+            const existingEdge = edges.find(e =>
+                (e.node1 === fromNode.id && e.node2 === toNode.id) ||
+                (e.node1 === toNode.id && e.node2 === fromNode.id)
+            );
+
+            if (existingEdge) return;
+
+            // Create edge object
+            const edgeId = `edge-${fromNode.id}-${toNode.id}`;
+            const edge = {
+                id: edgeId,
+                node1: fromNode.id,
+                node2: toNode.id,
+                weight: weight
+            };
+
+            edges.push(edge);
+
+            // Create DOM element for edge
+            drawEdge(edge);
+        }
+
+        function drawEdge(edge) {
+            const node1 = nodes.find(n => n.id === edge.node1);
+            const node2 = nodes.find(n => n.id === edge.node2);
+
+            // Calculate center point of both nodes
+            const x1 = node1.x;
+            const y1 = node1.y;
+            const x2 = node2.x;
+            const y2 = node2.y;
+
+            // Calculate the length of the line
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const length = Math.sqrt(dx*dx + dy*dy);
+
+            // Calculate the angle of the line
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            // Create edge element
+            const edgeElement = document.createElement("div");
+            edgeElement.id = edge.id;
+            edgeElement.className = "edge";
+
+            // Position the edge from the center of the first node
+            edgeElement.style.width = `${length}px`;
+            edgeElement.style.left = `${x1}px`;
+            edgeElement.style.top = `${y1}px`;
+            edgeElement.style.transformOrigin = 'left center';
+            edgeElement.style.transform = `rotate(${angle}deg)`;
+
+            // Add weight label
+            const weightLabel = document.createElement("div");
+            weightLabel.className = "edge-weight";
+            weightLabel.textContent = edge.weight;
+            edgeElement.appendChild(weightLabel);
+
+            graphContainer.appendChild(edgeElement);
+
+            // Ensure edges are behind nodes
+            repositionElements();
+        }
+
+        function repositionElements() {
+            // Move all edges to the back
+            const edges = document.querySelectorAll(".edge");
+            const nodes = document.querySelectorAll(".node");
+
+            edges.forEach(edge => {
+                graphContainer.insertBefore(edge, graphContainer.firstChild);
+            });
+
+            // Ensure nodes are on top of edges
+            nodes.forEach(node => {
+                graphContainer.appendChild(node);
+            });
+        }
+
+        async function runAlgorithm() {
+            if (nodes.length === 0) {
+                alert("Please select a graph type first.");
+                return;
+            }
+
+            // Reset previous animation
+            resetAnimation();
+
+            const algorithm = algorithmSelector.value;
+
+            // Prepare graph data for server
+            const graphData = {
+                nodes: nodes.map(node => ({
+                    id: node.id,
+                    x: node.x,
+                    y: node.y
+                })),
+                edges: edges
+            };
+
+            const payload = {
+                algorithm: algorithm,
+                graph: graphData
+            };
+
+            statusElement.textContent = `Running ${algorithm === 'prims' ? "Prim's" : "Kruskal's"} algorithm...`;
+            statusElement.style.color = "#ff9f0a";
+            runBtn.disabled = true;
+
+            try {
+                const response = await fetch("/run_mst", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusElement.textContent = `${algorithm === 'prims' ? "Prim's" : "Kruskal's"} algorithm completed.`;
+                    statusElement.style.color = "#4cd964";
+
+                    // Store MST edges for visualization
+                    mstEdges = result.mst_edges;
+
+                    // Set total weight
+                    totalWeightElement.textContent = `Total MST Weight: ${result.total_weight}`;
+
+                    // Prepare animation history
+                    animationHistory = result.history;
+
+                    if (Object.keys(animationHistory).length > 0) {
+                        animationControlsElement.style.display = 'flex';
+                        startAnimation();
+                    } else {
+                        statusElement.textContent = "No animation history available.";
+                    }
+                } else {
+                    statusElement.textContent = result.message || "Unexpected error.";
+                    statusElement.style.color = "#ff3b30";
+                    alert(result.message || "Unexpected error.");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                statusElement.textContent = `Error: ${err.message}`;
+                statusElement.style.color = "#ff3b30";
+                alert("Error running algorithm: " + err.message);
+            } finally {
+                runBtn.disabled = false;
+            }
+        }
+
+        function startAnimation() {
+            currentStep = 0;
+            isPlaying = true;
+            playPauseBtn.innerHTML = "❚❚ Pause";
+            updateAnimationStep();
+            animationInterval = setInterval(advanceAnimation, animationSpeed);
+        }
+
+        function advanceAnimation() {
+            if (currentStep >= Object.keys(animationHistory).length) {
+                stopAnimation();
+                return;
+            }
+            updateAnimationStep();
+            currentStep++;
+        }
+
+        function updateAnimationStep() {
+            // Reset all edge and node styles
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('mst');
+            });
+
+            // Visualize MST edges up to the current step
+            for (let i = 0; i <= currentStep; i++) {
+                const stepData = animationHistory[i];
+
+                if (stepData && stepData.node1 !== undefined && stepData.node2 !== undefined) {
+                    const edgeId = `edge-${stepData.node1}-${stepData.node2}`;
+                    const edgeElement = document.getElementById(edgeId);
+
+                    if (edgeElement) {
+                        edgeElement.classList.add('mst');
+                    }
+
+                    // Update step info
+                    stepInfoElement.textContent = `Step ${i}: Adding edge between nodes ${stepData.node1} and ${stepData.node2}`;
+                }
+            }
+
+            // Add final MST visualization at the last step
+            if (currentStep === Object.keys(animationHistory).length - 1) {
+                // Highlight all final MST edges
+                mstEdges.forEach(edge => {
+                    const edgeId = `edge-${edge.node1}-${edge.node2}`;
+                    const edgeElement = document.getElementById(edgeId);
+                    if (edgeElement) {
+                        edgeElement.classList.add('mst');
+                    }
+                });
+            }
+        }
+
+        function togglePlayPause() {
+            if (isPlaying) {
+                // Pause
+                clearInterval(animationInterval);
+                playPauseBtn.innerHTML = "▶ Play";
+            } else {
+                // Play/resume
+                animationInterval = setInterval(advanceAnimation, animationSpeed);
+                playPauseBtn.innerHTML = "❚❚ Pause";
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function stopAnimation() {
+            clearInterval(animationInterval);
+            isPlaying = false;
+            playPauseBtn.innerHTML = "▶ Replay";
+            statusElement.textContent = "Animation complete";
+        }
+
+        function resetAnimation() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+
+            // Reset edge styles
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.classList.remove('mst');
+            });
+
+            currentStep = 0;
+            isPlaying = false;
+            animationHistory = null;
+            playPauseBtn.innerHTML = "▶ Play";
+            stepInfoElement.textContent = '';
+        }
+    </script>
+</body>
+</html>
