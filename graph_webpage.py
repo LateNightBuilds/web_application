@@ -1,8 +1,12 @@
 import json
 from typing import List, Dict
 
-from algorithms import GridCellType, HistoryLogger, grid_to_graph
+import networkx as nx
+from algorithms.graph.search.methods import SearchMethod
 from algorithms.graph.shortest_path.methods import ShortestPathMethod
+from algorithms.graph.utils.definitions import GridCellType
+from algorithms.graph.utils.history import HistoryLogger
+from algorithms.graph.utils.utils import grid_to_graph
 from flask import Flask, render_template, request, jsonify
 
 from graph_client import run_shortest_path, run_search
@@ -53,7 +57,7 @@ def reset():
 def run_algorithm():
     try:
         data = request.get_json()
-        algorithm = data['algorithm']
+        algorithm_name = data['algorithm']
         grid_data = data['grid']
 
         # Verify that start and end are present
@@ -77,7 +81,7 @@ def run_algorithm():
             }), 400
 
         input_data = convert_html_cell_type_to_grid_cell_type(html_grid=grid_data)
-        method = convert_html_algorithm_type_to_algorithm_method(html_algorithm_type=algorithm)
+        method = convert_algorithm_name_to_algorithm_method(algorithm_name=algorithm_name)
         graph = grid_to_graph(input_data=input_data)
         cost, history = run_shortest_path(g=graph, method=method)
 
@@ -85,7 +89,7 @@ def run_algorithm():
 
         # Create the result object to save
         result_data = {
-            'algorithm': algorithm,
+            'algorithm': algorithm_name,
             'grid': grid_data,
             'history': formatted_history,
             'cost': cost
@@ -96,7 +100,7 @@ def run_algorithm():
             json.dump(result_data, f, indent=2)
 
         return jsonify({
-            "message": f"Algorithm {algorithm} completed successfully. Path cost: {cost}",
+            "message": f"Algorithm {algorithm_name} completed successfully. Path cost: {cost}",
             "history": formatted_history,
             "cost": cost
         })
@@ -110,7 +114,7 @@ def run_algorithm():
 def handle_search_algorithm():
     try:
         data = request.get_json()
-        algorithm_type = data['algorithm']
+        algorithm_name = data['algorithm']
         graph_data = data['graph']
 
         # Verify that start and end nodes are present
@@ -126,23 +130,28 @@ def handle_search_algorithm():
             }), 400
 
         # Run the search algorithm
-        success, history, message = run_search(algorithm_type, graph_data)
+        graph = convert_graph_data_to_graph(graph_data=graph_data)
+        start_node = next(node['id'] for node in graph_data['nodes'] if node['isStart'])
+        method = convert_algorithm_name_to_algorithm_method(algorithm_name=algorithm_name)
+        success, history = run_search(g=graph, start_node=start_node, method=method)
+
+        formatted_history = format_history_for_frontend(history)
 
         # Create the result object to save
         result_data = {
-            'algorithm': algorithm_type,
-            'graph': graph_data,
-            'history': history,
+            'algorithm': algorithm_name,
+            'grid': graph_data,
+            'history': formatted_history,
             'success': success
         }
 
-        # Save the graph data as JSON for future reference
-        with open('search_data.json', 'w') as f:
+        # Save the grid data as JSON for future reference
+        with open('grid_data.json', 'w') as f:
             json.dump(result_data, f, indent=2)
 
         return jsonify({
-            "message": message,
-            "history": history,
+            "message": f"Algorithm {algorithm_name} completed successfully. Path connected: {success}",
+            "history": formatted_history,
             "success": success
         })
 
@@ -190,11 +199,26 @@ def convert_html_cell_type_to_grid_cell_type(html_grid: List[Dict]) -> List[List
     return processed_grid
 
 
-def convert_html_algorithm_type_to_algorithm_method(html_algorithm_type: str) -> ShortestPathMethod:
-    if html_algorithm_type == 'dijkstra':
+def convert_graph_data_to_graph(graph_data: Dict) -> nx.Graph:
+    graph = nx.DiGraph()
+
+    [graph.add_edge(u_of_edge=edge['node1'],
+                    v_of_edge=edge['node2']) for edge in graph_data['edges']]
+
+    return graph
+
+
+def convert_algorithm_name_to_algorithm_method(algorithm_name: str) -> (ShortestPathMethod |
+                                                                        SearchMethod |
+                                                                        None):
+    if algorithm_name == 'dijkstra':
         return ShortestPathMethod.DIJKSTRA
-    elif html_algorithm_type == 'a_star':
+    elif algorithm_name == 'a_star':
         return ShortestPathMethod.A_STAR
+    elif algorithm_name == 'bfs':
+        return SearchMethod.BFS
+    elif algorithm_name == 'dfs':
+        return SearchMethod.DFS
 
 
 if __name__ == '__main__':

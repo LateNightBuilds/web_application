@@ -86,6 +86,10 @@
             box-shadow: 0 0 0 3px #af52de;
             z-index: 10;
         }
+        .node.frontier {
+            box-shadow: 0 0 0 3px #af52de;
+            z-index: 10;
+        }
         .edge {
             position: absolute;
             background-color: #555;
@@ -95,6 +99,22 @@
         }
         .edge.visited {
             background-color: #5ac8fa;
+        }
+        /* Arrow for directed edges */
+        .edge::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            right: 0;
+            top: -4px;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #555;
+            transform: translateX(100%);
+        }
+        .edge.visited::after {
+            border-left-color: #5ac8fa;
         }
         .controls {
             display: grid;
@@ -206,7 +226,6 @@
                         <option value="binary-tree">Binary Tree</option>
                         <option value="cycle">Cycle</option>
                         <option value="complete">Complete Graph</option>
-                        <option value="disconnected">Disconnected Components</option>
                     </select>
                 </div>
                 <div class="button-row">
@@ -243,6 +262,7 @@
         let currentStep = 0;
         let isPlaying = false;
         let animationSpeed = 1000; // 1 second per step
+        let frontier = new Set(); // Set to track frontier nodes
 
         // Set up predefined graph selector
         predefinedGraphsSelector.addEventListener("change", loadPredefinedGraph);
@@ -256,6 +276,7 @@
             startNode = null;
             endNode = null;
             nodeCounter = 0;
+            frontier = new Set();
 
             // Clear DOM elements
             while (graphContainer.firstChild) {
@@ -309,7 +330,53 @@
                 if (response.ok) {
                     statusElement.textContent = result.message;
                     statusElement.style.color = "#4cd964";
-                    animationHistory = result.history || {};
+
+                    // Create our own animation history from the result history
+                    // This simulates the search process with visit and traverse events
+                    animationHistory = {};
+                    let step = 0;
+
+                    // Add start node as first visited
+                    animationHistory[step++] = {
+                        type: 'visitNode',
+                        nodeId: startNode.id
+                    };
+
+                    // Create the BFS/DFS traversal animation
+                    const visitedNodes = new Set([startNode.id]);
+                    const queue = [startNode.id];
+
+                    while (queue.length > 0) {
+                        const currentNode = queue.shift();
+                        // Get the node's connections
+                        const sourceNode = nodes.find(n => n.id === currentNode);
+
+                        // For each connection
+                        for (const connection of sourceNode.connections) {
+                            // Add edge traversal step
+                            animationHistory[step++] = {
+                                type: 'traverseEdge',
+                                fromNodeId: currentNode,
+                                toNodeId: connection
+                            };
+
+                            // If not visited yet, mark as visited and add to queue
+                            if (!visitedNodes.has(connection)) {
+                                visitedNodes.add(connection);
+                                animationHistory[step++] = {
+                                    type: 'visitNode',
+                                    nodeId: connection
+                                };
+
+                                // For BFS we add to end of queue, for DFS to beginning
+                                if (algorithm === 'bfs') {
+                                    queue.push(connection);
+                                } else if (algorithm === 'dfs') {
+                                    queue.unshift(connection);
+                                }
+                            }
+                        }
+                    }
 
                     if (Object.keys(animationHistory).length > 0) {
                         statusElement.textContent = `${algorithm.toUpperCase()} completed. Showing exploration animation...`;
@@ -357,6 +424,7 @@
                     node.classList.remove('visited');
                 }
                 node.classList.remove('current');
+                node.classList.remove('frontier');
             });
 
             document.querySelectorAll('.edge').forEach(edge => {
@@ -373,14 +441,19 @@
                         if (nodeElement && !nodeElement.classList.contains('start') && !nodeElement.classList.contains('end')) {
                             nodeElement.classList.add('visited');
                         }
+                        // Remove from frontier when visited
+                        frontier.delete(step.nodeId);
                     }
                     // Handle edge traversals
                     else if (step.type === 'traverseEdge') {
-                        const edgeId1 = `edge-${step.fromNodeId}-${step.toNodeId}`;
-                        const edgeId2 = `edge-${step.toNodeId}-${step.fromNodeId}`;
-                        const edgeElement = document.getElementById(edgeId1) || document.getElementById(edgeId2);
+                        const edgeId = `edge-${step.fromNodeId}-${step.toNodeId}`;
+                        const edgeElement = document.getElementById(edgeId);
                         if (edgeElement) {
                             edgeElement.classList.add('visited');
+                        }
+                        // Add to frontier when a node is discovered
+                        if (!nodes.find(n => n.id === step.toNodeId).visited) {
+                            frontier.add(step.toNodeId);
                         }
                     }
                 }
@@ -393,10 +466,24 @@
                 if (nodeElement) {
                     nodeElement.classList.add('current');
                 }
+                // Mark node as visited in our data structure
+                const node = nodes.find(n => n.id === currentNodeStep.nodeId);
+                if (node) node.visited = true;
+
                 stepInfoElement.textContent = `Step ${currentStep}: Visiting node ${currentNodeStep.nodeId}`;
             } else if (currentNodeStep && currentNodeStep.type === 'traverseEdge') {
                 stepInfoElement.textContent = `Step ${currentStep}: Moving from node ${currentNodeStep.fromNodeId} to ${currentNodeStep.toNodeId}`;
             }
+
+            // Show frontier nodes (purple perimeter)
+            frontier.forEach(nodeId => {
+                const nodeElement = document.getElementById(`node-${nodeId}`);
+                if (nodeElement &&
+                   !nodeElement.classList.contains('visited') &&
+                   !nodeElement.classList.contains('current')) {
+                    nodeElement.classList.add('frontier');
+                }
+            });
         }
 
         function togglePlayPause() {
@@ -426,6 +513,7 @@
                     node.classList.remove('visited');
                 }
                 node.classList.remove('current');
+                node.classList.remove('frontier');
             });
             document.querySelectorAll('.edge').forEach(edge => {
                 edge.classList.remove('visited');
@@ -433,6 +521,13 @@
             currentStep = 0;
             isPlaying = false;
             animationHistory = null;
+            frontier = new Set();
+
+            // Reset visited property on all nodes
+            nodes.forEach(node => {
+                node.visited = false;
+            });
+
             playPauseBtn.innerHTML = "▶ Play";
             stepInfoElement.textContent = '';
         }
@@ -452,9 +547,6 @@
                     break;
                 case 'complete':
                     createCompleteGraph();
-                    break;
-                case 'disconnected':
-                    createDisconnectedGraph();
                     break;
             }
 
@@ -505,14 +597,14 @@
             const l3y = 260;
             addNodeAt(l3x1, l3y);
 
-            // Connect nodes to form a binary tree
-            connectNodesByIndices(0, 1);
-            connectNodesByIndices(0, 2);
-            connectNodesByIndices(1, 3);
-            connectNodesByIndices(1, 4);
-            connectNodesByIndices(2, 5);
-            connectNodesByIndices(2, 6);
-            connectNodesByIndices(3, 7);
+            // Connect nodes to form a binary tree (now directed)
+            createDirectedEdge(nodes[0], nodes[1]);
+            createDirectedEdge(nodes[0], nodes[2]);
+            createDirectedEdge(nodes[1], nodes[3]);
+            createDirectedEdge(nodes[1], nodes[4]);
+            createDirectedEdge(nodes[2], nodes[5]);
+            createDirectedEdge(nodes[2], nodes[6]);
+            createDirectedEdge(nodes[3], nodes[7]);
 
             // Set start and end nodes
             setNodeAsStart(0);
@@ -533,9 +625,9 @@
                 addNodeAt(x, y);
             }
 
-            // Connect nodes in a cycle
+            // Connect nodes in a cycle (now directed)
             for (let i = 0; i < nodeCount; i++) {
-                connectNodesByIndices(i, (i + 1) % nodeCount);
+                createDirectedEdge(nodes[i], nodes[(i + 1) % nodeCount]);
             }
 
             // Set start and end nodes
@@ -557,38 +649,18 @@
                 addNodeAt(x, y);
             }
 
-            // Connect all nodes to each other
+            // Connect all nodes to each other (now directed)
             for (let i = 0; i < nodeCount; i++) {
-                for (let j = i + 1; j < nodeCount; j++) {
-                    connectNodesByIndices(i, j);
+                for (let j = 0; j < nodeCount; j++) {
+                    if (i !== j) {
+                        createDirectedEdge(nodes[i], nodes[j]);
+                    }
                 }
             }
 
             // Set start and end nodes
             setNodeAsStart(0);
             setNodeAsEnd(3);
-        }
-
-        function createDisconnectedGraph() {
-            // Component 1
-            addNodeAt(80, 80);
-            addNodeAt(80, 150);
-            addNodeAt(150, 80);
-            connectNodesByIndices(0, 1);
-            connectNodesByIndices(0, 2);
-            connectNodesByIndices(1, 2);
-
-            // Component 2
-            addNodeAt(250, 200);
-            addNodeAt(250, 270);
-            addNodeAt(320, 235);
-            connectNodesByIndices(3, 4);
-            connectNodesByIndices(3, 5);
-            connectNodesByIndices(4, 5);
-
-            // Set start and end nodes
-            setNodeAsStart(0);
-            setNodeAsEnd(5);
         }
 
         function addNodeAt(x, y) {
@@ -619,27 +691,21 @@
             return node;
         }
 
-        function connectNodesByIndices(index1, index2) {
-            if (index1 >= nodes.length || index2 >= nodes.length) return;
-            createEdge(nodes[index1], nodes[index2]);
-        }
-
-        function createEdge(node1, node2) {
+        function createDirectedEdge(fromNode, toNode) {
             // Check if edge already exists
-            if (node1.connections.includes(node2.id) || node2.connections.includes(node1.id)) {
+            if (fromNode.connections.includes(toNode.id)) {
                 return;
             }
 
-            // Add connection to both nodes
-            node1.connections.push(node2.id);
-            node2.connections.push(node1.id);
+            // Add connection only to source node (directed edge)
+            fromNode.connections.push(toNode.id);
 
             // Create edge object
-            const edgeId = `edge-${node1.id}-${node2.id}`;
+            const edgeId = `edge-${fromNode.id}-${toNode.id}`;
             const edge = {
                 id: edgeId,
-                node1: node1.id,
-                node2: node2.id
+                node1: fromNode.id,
+                node2: toNode.id
             };
 
             edges.push(edge);
@@ -655,7 +721,7 @@
             // Calculate edge position and length
             const dx = node2.x - node1.x;
             const dy = node2.y - node1.y;
-            const length = Math.sqrt(dx*dx + dy*dy);
+            const length = Math.sqrt(dx*dx + dy*dy) - 40; // Adjust for node size
             const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
             // Create edge element
