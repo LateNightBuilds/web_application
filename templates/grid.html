@@ -337,7 +337,7 @@
             runBtn.disabled = true;
 
             try {
-                const response = await fetch("/run_algorithm", {
+                const response = await fetch("/run_shortest_path_algorithm", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
