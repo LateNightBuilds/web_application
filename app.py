@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 
 from graph_manager import shortest_path_algorithm, graph_search_algorithm, minimum_spanning_tree
+from signal_processing_manager import fast_fourier_transform, generate_signal
 
 app = Flask(__name__)
 
@@ -62,7 +63,7 @@ def handle_shortest_path_algorithm():
         return json_file
 
     except Exception as e:
-        print(f"Error in run_algorithm: {str(e)}")
+        print(f"Error in Shortest Path Finder: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
@@ -74,7 +75,7 @@ def handle_search_algorithm():
         return json_file
 
     except Exception as e:
-        print(f"Error in run_search_algorithm: {str(e)}")
+        print(f"Error in Graph Search: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
@@ -87,7 +88,31 @@ def handle_mst_algorithm():
 
 
     except Exception as e:
-        print(f"Error in run_mst_algorithm: {str(e)}")
+        print(f"Error in Minimum Spanning Tree: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/fourier_transform/generate_signal', methods=['POST'])
+def handle_generate_signal():
+    try:
+        data = request.get_json()
+        json_file = generate_signal(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error While Generating Signal: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/fourier_transform/calculate_fft', methods=['POST'])
+def handle_calculate_fft():
+    try:
+        data = request.get_json()
+        json_file = fast_fourier_transform(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error in Fast Fourier Transform: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
