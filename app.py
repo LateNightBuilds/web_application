@@ -19,20 +19,25 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/grid')
-def grid_page():
+@app.route('/shortest_path')
+def shortest_path_page():
     initialize_grid()
-    return render_template('grid.html')
+    return render_template('shortest_path.html')
 
 
-@app.route('/search')
-def search_page():
-    return render_template('search.html')
+@app.route('/graph_search')
+def graph_search_page():
+    return render_template('graph_search.html')
 
 
 @app.route('/minimum_spanning_tree')
-def mst_page():
+def minimum_spanning_tree_page():
     return render_template('minimum_spanning_tree.html')  # Add route for MST page
+
+
+@app.route('/fourier')
+def fourier_page():
+    return render_template('fourier.html')
 
 
 @app.route('/update', methods=['POST'])
@@ -49,8 +54,8 @@ def reset():
     return jsonify({"message": "Grid reset!"})
 
 
-@app.route('/run_shortest_path_algorithm', methods=['POST'])
-def run_shortest_path_algorithm():
+@app.route('/handle_shortest_path_algorithm', methods=['POST'])
+def handle_shortest_path_algorithm():
     try:
         data = request.get_json()
         json_file = shortest_path_algorithm(data=data)
@@ -61,7 +66,7 @@ def run_shortest_path_algorithm():
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
-@app.route('/run_search', methods=['POST'])
+@app.route('/handle_search_algorithm', methods=['POST'])
 def handle_search_algorithm():
     try:
         data = request.get_json()
@@ -73,7 +78,7 @@ def handle_search_algorithm():
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
-@app.route('/run_mst', methods=['POST'])
+@app.route('/handle_mst_algorithm', methods=['POST'])
 def handle_mst_algorithm():
     try:
         data = request.get_json()

@@ -319,7 +319,7 @@
             runBtn.disabled = true;
 
             try {
-                const response = await fetch("/run_search", {
+                const response = await fetch("/handle_search_algorithm", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
