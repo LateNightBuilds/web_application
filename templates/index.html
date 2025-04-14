@@ -117,8 +117,22 @@
 </head>
 <body>
     <div class="header">
-        <h1>Algorithm Visualizer</h1>
-        <p>Interactive visualizations of computer science algorithms</p>
+        <h1 style="font-size: 58px;">Algorithms Playground</h1>
+        <p style="font-size: 18px;" >Interactive visualizations of computer science algorithms</p>
+    </div>
+
+    <div style="margin: 20px auto; padding: 10px; background-color: #2c2c2e; border-radius: 30px; max-width: 850px; text-align: left; position: relative; overflow: hidden; border-left: 0px solid #5ac8fa;">
+        <div style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background-color: #1e1e1e; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" width="24" height="30" fill="none" stroke="#5ac8fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <div style="margin-left: 60px;">
+            <p style="color: #5ac8fa; font-weight: bold; margin-bottom: 5px; font-size: 15px;">Frontend? Pure ClaudeAI magic. Everything else? Blood, sweat, and way too much coffee.</p>
+            <p style="color: #bbb; font-size: 14px; margin: 0;">Found a bug? Blame me, not the bot — <a href="mailto:yovelbenazaria@gmail.com" style="color: #5ac8fa; text-decoration: none;">yovelbenazaria@gmail.com</a></p>
+        </div>
     </div>
 
     <div class="container">
@@ -193,6 +207,43 @@
                     <h2>Fourier Transform</h2>
                     <p>Frequency domain visualization</p>
                     <a href="/fourier" class="button">View</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#5ac8fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"></path>
+                        <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <h2>Sound Processing</h2>
+                    <p>Audio filters and visualization</p>
+                    <a href="/sound_processing" class="button">View</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#5ac8fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="6"></circle>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <line x1="12" y1="2" x2="12" y2="4"></line>
+                        <line x1="12" y1="20" x2="12" y2="22"></line>
+                        <line x1="4" y1="12" x2="2" y2="12"></line>
+                        <line x1="20" y1="12" x2="22" y2="12"></line>
+                        <line x1="6.34" y1="6.34" x2="4.93" y2="4.93"></line>
+                        <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+                        <line x1="6.34" y1="17.66" x2="4.93" y2="19.07"></line>
+                        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <h2>Sound Radar</h2>
+                    <p>Audio source localization</p>
+                    <a href="/sound_radar" class="button">View</a>
                 </div>
             </div>
         </div>

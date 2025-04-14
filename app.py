@@ -1,7 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 
-from graph_manager import shortest_path_algorithm, graph_search_algorithm, minimum_spanning_tree
-from signal_processing_manager import fast_fourier_transform, generate_signal
+from graph_manager import (shortest_path_algorithm,
+                           graph_search_algorithm,
+                           minimum_spanning_tree)
+from signal_processing_manager import (fast_fourier_transform,
+                                       generate_signal,
+                                       load_sample,
+                                       apply_filter,
+                                       sound_radar)
 
 app = Flask(__name__)
 
@@ -33,12 +39,22 @@ def graph_search_page():
 
 @app.route('/minimum_spanning_tree')
 def minimum_spanning_tree_page():
-    return render_template('minimum_spanning_tree.html')  # Add route for MST page
+    return render_template('minimum_spanning_tree.html')
 
 
 @app.route('/fourier')
 def fourier_page():
     return render_template('fourier.html')
+
+
+@app.route('/sound_processing')
+def sound_processing_page():
+    return render_template('sound_processing.html')
+
+
+@app.route('/sound_radar')
+def sound_radar_page():
+    return render_template('sound_radar.html')
 
 
 @app.route('/update', methods=['POST'])
@@ -113,6 +129,52 @@ def handle_calculate_fft():
 
     except Exception as e:
         print(f"Error in Fast Fourier Transform: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/sound_processing/load_sample', methods=['POST'])
+def handle_load_sample():
+    try:
+        data = request.get_json()
+        json_file = load_sample(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error loading sound sample: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/sound_processing/apply_filter', methods=['POST'])
+def handle_apply_filter():
+    try:
+        data = request.get_json()
+        json_file = apply_filter(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error applying filter: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/sound_samples/<filename>')
+def serve_sound_sample(filename):
+    """Special route to serve sound samples directly if needed."""
+    from flask import send_from_directory
+    import os
+
+    samples_dir = os.path.join(app.static_folder, 'sound_samples')
+    return send_from_directory(samples_dir, filename)
+
+
+@app.route('/process_sound_radar', methods=['POST'])
+def handle_sound_radar():
+    try:
+        data = request.get_json()
+        json_file = sound_radar(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error in Sound Radar processing: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 

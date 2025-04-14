@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sound Radar</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .mini-nav {
+            background-color: #1e1e1e;
+            padding: 6px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .mini-nav a {
+            color: #5ac8fa;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .mini-nav a:hover {
+            text-decoration: underline;
+        }
+        .section {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #333;
+            padding: 40px 20px;
+        }
+        .split-view {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 800px) {
+            .split-view {
+                flex-direction: column;
+            }
+        }
+        .controls-container {
+            flex: 1;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .visualization-container {
+            flex: 2;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .radar-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background-color: #2c2c2e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #radarCanvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .controls {
+            display: grid;
+            gap: 15px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+        select, input, button {
+            padding: 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            background-color: #2c2c2e;
+            color: #e0e0e0;
+        }
+        button:hover, select:hover {
+            background-color: #3a3a3c;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #1c1c1e;
+            color: #666;
+            cursor: not-allowed;
+        }
+        h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #5ac8fa;
+        }
+        p {
+            font-size: 14px;
+            color: #bbb;
+            line-height: 1.5;
+        }
+        label {
+            font-size: 14px;
+            color: #bbb;
+        }
+        .status-message {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ff9f0a;
+        }
+        .microphone {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #5ac8fa;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: move;
+            z-index: 10;
+        }
+        .microphone::after {
+            content: attr(data-id);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: white;
+        }
+        .sound-source {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #ff3b30;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: move;
+            z-index: 10;
+        }
+        .sound-source::after {
+            content: "Source";
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: white;
+        }
+        .wave-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 59, 48, 0.7);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: wave-animation 3s linear infinite;
+            z-index: 5;
+        }
+        @keyframes wave-animation {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 0.8;
+            }
+            100% {
+                width: 500px;
+                height: 500px;
+                opacity: 0;
+            }
+        }
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .animation-controls button {
+            flex: 1;
+        }
+        .coordinates-display {
+            margin-top: 15px;
+            font-size: 14px;
+            background-color: #2c2c2e;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .coordinates-display p {
+            margin: 5px 0;
+        }
+        .result-section {
+            margin-top: 20px;
+            background-color: #2c2c2e;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .result-section h3 {
+            margin-top: 0;
+        }
+        .time-display {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .time-item {
+            background-color: #3a3a3c;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .est-position {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #3a3a3c;
+            border-radius: 4px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mini-nav">
+        <a href="/">Home</a>
+    </div>
+
+    <div class="section">
+        <h2>Sound Radar Demonstration</h2>
+        <p>This visualization demonstrates how multiple microphones can be used to locate a sound source through time difference of arrival (TDOA) techniques. You can position four microphones and a sound source in the 2D space and observe how the system calculates the sound source's position.</p>
+
+        <div class="split-view">
+            <div class="controls-container">
+                <h3>Controls</h3>
+                <div class="controls">
+                    <p>Adjust the positions of the microphones and sound source by dragging them in the visualization area.</p>
+                    <div class="control-group" style="margin-top: 15px;">
+                        <button id="runDetectionBtn">Run Detection</button>
+                        <button id="resetBtn" style="margin-top: 10px;">Reset Positions</button>
+                    </div>
+                </div>
+
+                <div class="coordinates-display">
+                    <h3>Object Positions</h3>
+                    <p>Source: <span id="sourceCoords">X: 300, Y: 150</span></p>
+                    <p>Mic 1: <span id="mic1Coords">X: 0, Y: 0</span></p>
+                    <p>Mic 2: <span id="mic2Coords">X: 100, Y: 0</span></p>
+                    <p>Mic 3: <span id="mic3Coords">X: 0, Y: 100</span></p>
+                    <p>Mic 4: <span id="mic4Coords">X: 100, Y: 100</span></p>
+                </div>
+
+                <div class="animation-controls">
+                    <button id="playBtn">Play Animation</button>
+                    <button id="stopBtn">Stop Animation</button>
+                </div>
+
+                <div class="status-message" id="statusMessage">Drag the microphones and source to position them</div>
+            </div>
+
+            <div class="visualization-container">
+                <div class="radar-container" id="radarContainer">
+                    <canvas id="radarCanvas"></canvas>
+                    <div class="microphone" id="mic1" data-id="1" style="left: 0px; top: 0px;"></div>
+                    <div class="microphone" id="mic2" data-id="2" style="left: 100px; top: 0px;"></div>
+                    <div class="microphone" id="mic3" data-id="3" style="left: 0px; top: 100px;"></div>
+                    <div class="microphone" id="mic4" data-id="4" style="left: 100px; top: 100px;"></div>
+                    <div class="sound-source" id="soundSource" style="left: 300px; top: 150px;"></div>
+                </div>
+
+                <div class="result-section">
+                    <h3>Detection Results</h3>
+                    <div class="time-display">
+                        <div class="time-item">
+                            <strong>TDOA 1-2:</strong> <span id="tdoa12">0.00</span> ms
+                        </div>
+                        <div class="time-item">
+                            <strong>TDOA 1-3:</strong> <span id="tdoa13">0.00</span> ms
+                        </div>
+                        <div class="time-item">
+                            <strong>TDOA 1-4:</strong> <span id="tdoa14">0.00</span> ms
+                        </div>
+                        <div class="time-item">
+                            <strong>TDOA 2-3:</strong> <span id="tdoa23">0.00</span> ms
+                        </div>
+                    </div>
+                    <div class="est-position">
+                        <strong>Estimated Position:</strong> <span id="estimatedPosition">Run detection to calculate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h3>About Sound Radar</h3>
+            <p>Sound radar, also known as acoustic localization, is a technique that uses multiple microphones to determine the position of a sound source. The process works by measuring the time difference of arrival (TDOA) of sound waves at different microphones.</p>
+            <p>Key concepts:</p>
+            <ul style="color: #bbb; font-size: 14px; line-height: 1.5;">
+                <li><strong>TDOA (Time Difference of Arrival):</strong> When a sound occurs, it reaches different microphones at different times based on their distances from the source.</li>
+                <li><strong>Hyperbolic Localization:</strong> Each pair of microphones creates a hyperbola of possible sound source locations. The intersection of multiple hyperbolas reveals the actual position.</li>
+                <li><strong>Multilateration:</strong> The mathematical process of determining a position by measuring the time differences between the signal arrival at multiple receivers.</li>
+            </ul>
+            <p>This technique is used in various applications including gunshot detection systems, underwater acoustic tracking, and audio surveillance.</p>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const radarContainer = document.getElementById('radarContainer');
+        const radarCanvas = document.getElementById('radarCanvas');
+        const ctx = radarCanvas.getContext('2d');
+        const soundSource = document.getElementById('soundSource');
+        const mic1 = document.getElementById('mic1');
+        const mic2 = document.getElementById('mic2');
+        const mic3 = document.getElementById('mic3');
+        const mic4 = document.getElementById('mic4');
+        const runDetectionBtn = document.getElementById('runDetectionBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const sourceCoords = document.getElementById('sourceCoords');
+        const mic1Coords = document.getElementById('mic1Coords');
+        const mic2Coords = document.getElementById('mic2Coords');
+        const mic3Coords = document.getElementById('mic3Coords');
+        const mic4Coords = document.getElementById('mic4Coords');
+        const tdoa12Element = document.getElementById('tdoa12');
+        const tdoa13Element = document.getElementById('tdoa13');
+        const tdoa14Element = document.getElementById('tdoa14');
+        const tdoa23Element = document.getElementById('tdoa23');
+        const estimatedPositionElement = document.getElementById('estimatedPosition');
+
+        // Variables for sound wave animation
+        let animationActive = false;
+        let animationId = null;
+        let waves = [];
+
+        // Variables for dragging
+        let selectedElement = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // Initialize the canvas size
+        function initCanvas() {
+            radarCanvas.width = radarContainer.offsetWidth;
+            radarCanvas.height = radarContainer.offsetHeight;
+        }
+
+        // Update coordinates display
+        function updateCoordinatesDisplay() {
+            sourceCoords.textContent = `X: ${Math.round(parseInt(soundSource.style.left))}, Y: ${Math.round(parseInt(soundSource.style.top))}`;
+            mic1Coords.textContent = `X: ${Math.round(parseInt(mic1.style.left))}, Y: ${Math.round(parseInt(mic1.style.top))}`;
+            mic2Coords.textContent = `X: ${Math.round(parseInt(mic2.style.left))}, Y: ${Math.round(parseInt(mic2.style.top))}`;
+            mic3Coords.textContent = `X: ${Math.round(parseInt(mic3.style.left))}, Y: ${Math.round(parseInt(mic3.style.top))}`;
+            mic4Coords.textContent = `X: ${Math.round(parseInt(mic4.style.left))}, Y: ${Math.round(parseInt(mic4.style.top))}`;
+        }
+
+        // Reset positions to default
+        function resetPositions() {
+            soundSource.style.left = '300px';
+            soundSource.style.top = '150px';
+
+            // Set microphone positions to the specified coordinates (0,0), (1,0), (0,1), (1,1)
+            // Scale by 100 to convert to pixels (assuming 1 unit = 100px)
+            mic1.style.left = '0px';
+            mic1.style.top = '0px';
+            mic2.style.left = '100px';
+            mic2.style.top = '0px';
+            mic3.style.left = '0px';
+            mic3.style.top = '100px';
+            mic4.style.left = '100px';
+            mic4.style.top = '100px';
+
+            updateCoordinatesDisplay();
+            clearResults();
+            stopAnimation();
+        }
+
+        // Clear detection results
+        function clearResults() {
+            tdoa12Element.textContent = '0.00';
+            tdoa13Element.textContent = '0.00';
+            tdoa14Element.textContent = '0.00';
+            tdoa23Element.textContent = '0.00';
+            estimatedPositionElement.textContent = 'Run detection to calculate';
+            statusMessage.textContent = 'Drag the microphones and source to position them';
+            statusMessage.style.color = '#ff9f0a';
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+        }
+
+        // Draw estimated position on canvas
+        function drawEstimatedPosition(x, y) {
+            ctx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+
+            // Draw a pulsing circle at estimated position
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#4cd964';
+            ctx.fill();
+
+            // Draw a crosshair
+            ctx.beginPath();
+            ctx.moveTo(x - 15, y);
+            ctx.lineTo(x + 15, y);
+            ctx.moveTo(x, y - 15);
+            ctx.lineTo(x, y + 15);
+            ctx.strokeStyle = '#4cd964';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw connecting lines to each microphone
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(parseInt(mic1.style.left), parseInt(mic1.style.top));
+            ctx.moveTo(x, y);
+            ctx.lineTo(parseInt(mic2.style.left), parseInt(mic2.style.top));
+            ctx.moveTo(x, y);
+            ctx.lineTo(parseInt(mic3.style.left), parseInt(mic3.style.top));
+            ctx.moveTo(x, y);
+            ctx.lineTo(parseInt(mic4.style.left), parseInt(mic4.style.top));
+            ctx.strokeStyle = 'rgba(76, 217, 100, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // Run the detection process - send positions to backend
+        async function runDetection() {
+            statusMessage.textContent = 'Running detection...';
+            statusMessage.style.color = '#ff9f0a';
+
+            try {
+                // Get positions
+                const sourceX = parseInt(soundSource.style.left);
+                const sourceY = parseInt(soundSource.style.top);
+                const mic1X = parseInt(mic1.style.left);
+                const mic1Y = parseInt(mic1.style.top);
+                const mic2X = parseInt(mic2.style.left);
+                const mic2Y = parseInt(mic2.style.top);
+                const mic3X = parseInt(mic3.style.left);
+                const mic3Y = parseInt(mic3.style.top);
+                const mic4X = parseInt(mic4.style.left);
+                const mic4Y = parseInt(mic4.style.top);
+
+                // Send data to server
+                const response = await fetch('/process_sound_radar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        source_x: sourceX,
+                        source_y: sourceY,
+                        mic1_x: mic1X,
+                        mic1_y: mic1Y,
+                        mic2_x: mic2X,
+                        mic2_y: mic2Y,
+                        mic3_x: mic3X,
+                        mic3_y: mic3Y,
+                        mic4_x: mic4X,
+                        mic4_y: mic4Y
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Unknown error occurred');
+                }
+
+                // Display TDOA values from server response
+                tdoa12Element.textContent = data.tdoa_values.tdoa12.toFixed(2);
+                tdoa13Element.textContent = data.tdoa_values.tdoa13.toFixed(2);
+                tdoa14Element.textContent = data.tdoa_values.tdoa14.toFixed(2);
+                tdoa23Element.textContent = data.tdoa_values.tdoa23.toFixed(2);
+
+                // Get estimated position from server response
+                const estimatedX = data.estimated_position.x;
+                const estimatedY = data.estimated_position.y;
+                const errorInMeters = data.error_meters;
+
+                // Update status and estimated position display
+                estimatedPositionElement.textContent = `X: ${Math.round(estimatedX)}, Y: ${Math.round(estimatedY)} (Error: ${errorInMeters.toFixed(2)}m)`;
+                statusMessage.textContent = 'Detection complete';
+                statusMessage.style.color = '#4cd964';
+
+                // Draw the estimated position on the canvas
+                drawEstimatedPosition(estimatedX, estimatedY);
+
+                return data;
+            } catch (error) {
+                console.error('Error running detection:', error);
+                statusMessage.textContent = `Error: ${error.message}`;
+                statusMessage.style.color = '#ff3b30';
+                return null;
+            }
+        }
+
+        // Create and start the sound wave animation
+        function startAnimation() {
+            if (animationActive) return;
+            animationActive = true;
+
+            // Remove any existing wave elements
+            stopAnimation();
+
+            // Create new waves at regular intervals
+            const createWave = () => {
+                const wave = document.createElement('div');
+                wave.className = 'wave-circle';
+                const sourceX = parseInt(soundSource.style.left);
+                const sourceY = parseInt(soundSource.style.top);
+                wave.style.left = sourceX + 'px';
+                wave.style.top = sourceY + 'px';
+                radarContainer.appendChild(wave);
+                waves.push(wave);
+
+                // Remove the wave after animation completes
+                setTimeout(() => {
+                    if (wave.parentNode) {
+                        wave.parentNode.removeChild(wave);
+                    }
+                    waves = waves.filter(w => w !== wave);
+                }, 3000);
+            };
+
+            // Create initial wave
+            createWave();
+
+            // Create new waves every second
+            animationId = setInterval(createWave, 1000);
+        }
+
+        // Stop the sound wave animation
+        function stopAnimation() {
+            if (animationId) {
+                clearInterval(animationId);
+                animationId = null;
+            }
+
+            // Remove all wave elements
+            waves.forEach(wave => {
+                if (wave.parentNode) {
+                    wave.parentNode.removeChild(wave);
+                }
+            });
+            waves = [];
+            animationActive = false;
+        }
+
+        // Mouse down event handler for draggable elements
+        function onMouseDown(e) {
+            selectedElement = e.target;
+
+            // Get mouse position
+            const rect = radarContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Calculate offset from element position to mouse position
+            const elementX = parseInt(selectedElement.style.left) || 0;
+            const elementY = parseInt(selectedElement.style.top) || 0;
+            offsetX = mouseX - elementX;
+            offsetY = mouseY - elementY;
+
+            // Add event listeners for dragging
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+
+            // Prevent default to avoid text selection during drag
+            e.preventDefault();
+        }
+
+        // Mouse move event handler for dragging
+        function onMouseMove(e) {
+            if (!selectedElement) return;
+
+            // Get new position
+            const rect = radarContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Calculate new position accounting for offset
+            let newX = mouseX - offsetX;
+            let newY = mouseY - offsetY;
+
+            // Constrain to container bounds
+            newX = Math.max(0, Math.min(rect.width, newX));
+            newY = Math.max(0, Math.min(rect.height, newY));
+
+            // Update element position
+            selectedElement.style.left = newX + 'px';
+            selectedElement.style.top = newY + 'px';
+
+            // Update coordinates display
+            updateCoordinatesDisplay();
+
+            e.preventDefault();
+        }
+
+        // Mouse up event handler for ending drag
+        function onMouseUp() {
+            selectedElement = null;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        // Set up draggable elements
+        function setupDraggables() {
+            // Add mouse down event to draggable elements
+            soundSource.addEventListener('mousedown', onMouseDown);
+            mic1.addEventListener('mousedown', onMouseDown);
+            mic2.addEventListener('mousedown', onMouseDown);
+            mic3.addEventListener('mousedown', onMouseDown);
+            mic4.addEventListener('mousedown', onMouseDown);
+
+            // Prevent drag start (default browser behavior)
+            soundSource.addEventListener('dragstart', e => e.preventDefault());
+            mic1.addEventListener('dragstart', e => e.preventDefault());
+            mic2.addEventListener('dragstart', e => e.preventDefault());
+            mic3.addEventListener('dragstart', e => e.preventDefault());
+            mic4.addEventListener('dragstart', e => e.preventDefault());
+        }
+
+        // Initialize everything
+        function init() {
+            // Set up canvas
+            initCanvas();
+
+            // Set up draggable elements
+            setupDraggables();
+
+            // Set initial positions
+            resetPositions();
+
+            // Set up button event listeners
+            runDetectionBtn.addEventListener('click', runDetection);
+            resetBtn.addEventListener('click', resetPositions);
+            playBtn.addEventListener('click', startAnimation);
+            stopBtn.addEventListener('click', stopAnimation);
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                initCanvas();
+                // Clear any visualization
+                ctx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+            });
+
+            // Update initial coordinates display
+            updateCoordinatesDisplay();
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
