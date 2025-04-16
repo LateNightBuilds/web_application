@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sound Processing</title>
     <style>
         body {
@@ -44,6 +45,12 @@
             .split-view {
                 flex-direction: column;
             }
+            .audio-controls {
+                flex-direction: column;
+            }
+            .audio-player {
+                width: 100% !important;
+            }
         }
         .controls-container {
             flex: 1;
@@ -66,7 +73,7 @@
             margin-bottom: 20px;
             position: relative;
         }
-        #originalWaveformChart, #filteredWaveformChart, #originalSpectrumChart, #filteredSpectrumChart {
+        #originalWaveformChart, #filteredWaveformChart {
             width: 100%;
             height: 100%;
             background-color: #2c2c2e;
@@ -137,43 +144,38 @@
         }
         .audio-controls {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            gap: 20px;
             margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .audio-player-container {
+            flex: 1;
+            min-width: 250px;
         }
         .audio-player {
             width: 100%;
             height: 40px;
             background-color: #2c2c2e;
             border-radius: 6px;
+            margin-top: 8px;
         }
         .audio-section {
-            margin-top: 15px;
-            padding: 15px;
-            background-color: #2c2c2e;
-            border-radius: 6px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
             max-width: 1000px;
-            margin: 0 auto 20px auto;
         }
         .audio-section h3 {
             margin-top: 0;
             color: #5ac8fa;
         }
-        .play-button {
-            background-color: #5ac8fa;
-            color: #121212;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 12px;
-            margin-top: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .play-button:hover {
-            background-color: #48a4d9;
-        }
-        .play-button:active {
-            background-color: #3b9ac8;
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #2c2c2e;
+            color: #bbb;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
@@ -188,30 +190,29 @@
         <h2>Sound Processing Demonstration</h2>
         <p>This section allows you to explore basic audio signal processing techniques. You can select a sound sample, apply various filters, and listen to and visualize the results.</p>
 
-        <div class="audio-section" style="margin-bottom: 20px;">
-        <h3>Listen to the Sounds</h3>
-        <div class="audio-controls">
-            <div>
-                <label>Original Sound:</label>
-                <audio id="originalAudio" controls class="audio-player">
-                    <source id="originalAudioSource" src="" type="audio/wav">
-                    Your browser does not support the audio element.
-                </audio>
-                <button id="playOriginalBtn" class="play-button">Play Original</button>
-            </div>
+        <!-- Updated Audio Section -->
+        <div class="audio-section">
+            <h3>Listen to the Sounds</h3>
+            <div class="audio-controls">
+                <div class="audio-player-container">
+                    <label>Original Sound:</label>
+                    <!-- Direct audio element without nested source -->
+                    <audio id="originalAudio" controls class="audio-player" preload="auto">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
 
-            <div>
-                <label>Filtered Sound:</label>
-                <audio id="filteredAudio" controls class="audio-player">
-                    <source id="filteredAudioSource" src="" type="audio/wav">
-                    Your browser does not support the audio element.
-                </audio>
-                <button id="playFilteredBtn" class="play-button">Play Filtered</button>
+                <div class="audio-player-container">
+                    <label>Filtered Sound:</label>
+                    <!-- Direct audio element without nested source -->
+                    <audio id="filteredAudio" controls class="audio-player" preload="auto">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="split-view">
+        <div class="split-view">
             <div class="controls-container">
                 <h3>Filter Controls</h3>
                 <div class="controls">
@@ -261,7 +262,7 @@
                     <button id="applyFilterBtn">Apply Filter</button>
                 </div>
 
-                <div class="status-message" id="statusMessage">Select a sound sample and filter settings</div>
+                <div id="statusMessage" class="status-message">Select a sound sample and filter settings</div>
             </div>
 
             <div class="visualization-container">
@@ -278,10 +279,6 @@
                         <canvas id="filteredWaveformChart"></canvas>
                     </div>
                 </div>
-
-                <!-- Spectrum charts removed for simplicity -->
-
-                <!-- Audio section moved to the top of the page -->
             </div>
         </div>
 
@@ -306,15 +303,7 @@
         let audioData = {
             originalWaveform: [],
             filteredWaveform: [],
-            sampleRate: 44100,
-            originalSpectrum: {
-                frequency: [],
-                magnitude: []
-            },
-            filteredSpectrum: {
-                frequency: [],
-                magnitude: []
-            }
+            sampleRate: 44100
         };
 
         // Initialize charts
@@ -426,11 +415,21 @@
 
         // Update charts with new data
         function updateCharts() {
+            console.log("Updating charts with data:", {
+                originalLength: audioData.originalWaveform.length,
+                filteredLength: audioData.filteredWaveform.length,
+                sampleRate: audioData.sampleRate
+            });
+
             // Skip if we don't have data yet
-            if (!audioData.originalWaveform.length) return;
+            if (!audioData.originalWaveform.length) {
+                console.log("No original waveform data available, skipping chart update");
+                return;
+            }
 
             // Get a subset of points for better rendering performance
             const subsampleFactor = Math.ceil(audioData.originalWaveform.length / 1000);
+            console.log("Using subsample factor:", subsampleFactor);
 
             // Create time labels based on sample rate
             const timeLabels = Array.from({length: Math.ceil(audioData.originalWaveform.length / subsampleFactor)},
@@ -438,9 +437,15 @@
 
             // Subsample waveform data
             const originalWaveformSubsampled = audioData.originalWaveform.filter((_, i) => i % subsampleFactor === 0);
-            const filteredWaveformSubsampled = audioData.filteredWaveform.length ?
-                audioData.filteredWaveform.filter((_, i) => i % subsampleFactor === 0) :
-                Array(originalWaveformSubsampled.length).fill(0);
+
+            // Handle filtered waveform data if it exists
+            let filteredWaveformSubsampled = [];
+            if (audioData.filteredWaveform && audioData.filteredWaveform.length) {
+                filteredWaveformSubsampled = audioData.filteredWaveform.filter((_, i) => i % subsampleFactor === 0);
+            } else {
+                // If no filtered data, use zeros with the same length as original data
+                filteredWaveformSubsampled = Array(originalWaveformSubsampled.length).fill(0);
+            }
 
             // Update waveform charts
             originalWaveformChart.data.labels = timeLabels;
@@ -450,64 +455,101 @@
             filteredWaveformChart.data.labels = timeLabels;
             filteredWaveformChart.data.datasets[0].data = filteredWaveformSubsampled;
             filteredWaveformChart.update();
+
+            console.log("Charts updated successfully");
         }
 
-        async function loadSoundSample() {
+        // Modified loadSoundSample function with fixed audio handling
+        function loadSoundSample() {
             const selectedSample = document.getElementById('soundSample').value;
             const statusMessage = document.getElementById('statusMessage');
 
             statusMessage.textContent = `Loading ${selectedSample} sample...`;
             statusMessage.style.color = '#ff9f0a';
 
-            try {
-                const response = await fetch(`/sound_processing/load_sample`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sample_name: selectedSample
-                    })
-                });
+            console.log("Loading sound sample:", selectedSample);
 
+            // Use the fetch API to get the sample data
+            fetch(`/sound_processing/load_sample`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sample_name: selectedSample
+                })
+            })
+            .then(response => {
                 if (!response.ok) {
                     throw new Error(`Failed to load sample: ${response.statusText}`);
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Sample data received:", data);
 
-                const data = await response.json();
+                // Check if we have the required data
+                if (!data.waveform) {
+                    throw new Error("Invalid response: missing waveform data");
+                }
 
                 // Store the sample data
                 audioData.originalWaveform = data.waveform;
-                audioData.sampleRate = data.frequency; // Backend returns sample rate as 'frequency'
+                audioData.sampleRate = data.frequency;
 
-                // Reset filtered data
-                audioData.filteredWaveform = [];
+                // Handle filtered waveform if it exists
+                if (data.filtered_waveform) {
+                    audioData.filteredWaveform = data.filtered_waveform;
+                } else {
+                    audioData.filteredWaveform = [];
+                }
 
                 // Update charts
                 updateCharts();
 
-                // Update audio element
+                // Update original audio element - use absolute path to ensure it loads
                 const originalAudio = document.getElementById('originalAudio');
-                const originalAudioSource = document.getElementById('originalAudioSource');
-                originalAudioSource.src = `/static/sound_samples/${selectedSample}.wav`;
+                originalAudio.src = `/static/sound_samples/${selectedSample}.wav`;
+
+                console.log("Loading original audio from:", `/static/sound_samples/${selectedSample}.wav`);
                 originalAudio.load();
 
-                // Reset filtered audio
+                // Try to play the audio to verify it works (will be muted and will only work if user interacted with page)
+                originalAudio.volume = 0;
+                originalAudio.play().then(() => {
+                    console.log("Original audio loaded successfully");
+                    originalAudio.pause();
+                    originalAudio.currentTime = 0;
+                    originalAudio.volume = 1;
+                }).catch(err => {
+                    console.log("Could not autoplay audio (this is normal):", err);
+                });
+
+                // Update filtered audio element if we have filtered data
                 const filteredAudio = document.getElementById('filteredAudio');
-                const filteredAudioSource = document.getElementById('filteredAudioSource');
-                filteredAudioSource.src = '';
+
+                if (data.filtered_waveform && data.filtered_waveform.length > 0) {
+                    const timestamp = new Date().getTime(); // Add timestamp to prevent caching
+                    filteredAudio.src = `/static/sound_samples/${selectedSample}_filtered.wav?t=${timestamp}`;
+                    console.log("Loading filtered audio from:", `/static/sound_samples/${selectedSample}_filtered.wav?t=${timestamp}`);
+                } else {
+                    filteredAudio.src = '';
+                }
                 filteredAudio.load();
 
                 statusMessage.textContent = `${selectedSample} sample loaded successfully`;
                 statusMessage.style.color = '#4cd964';
-            } catch (error) {
-                console.error('Error loading sound sample:', error);
+            })
+            .catch(error => {
+                console.error("Error loading sound sample:", error);
                 statusMessage.textContent = `Error: ${error.message}`;
                 statusMessage.style.color = '#ff3b30';
-            }
+            });
         }
 
-        async function applyFilter() {
+        // Modified applyFilter function with fixed audio handling
+        function applyFilter() {
+            console.log("Apply filter function called");
             const selectedSample = document.getElementById('soundSample').value;
             const filterType = document.getElementById('filterType').value;
             const cutoffFrequency = parseFloat(document.getElementById('cutoffFrequency').value);
@@ -517,62 +559,86 @@
             const statusMessage = document.getElementById('statusMessage');
 
             // Make sure we have a sample loaded
-            if (!audioData.originalWaveform.length) {
+            if (!audioData.originalWaveform || !audioData.originalWaveform.length) {
                 statusMessage.textContent = 'Please load a sound sample first';
                 statusMessage.style.color = '#ff3b30';
+                console.error("No original waveform data available");
                 return;
             }
 
             statusMessage.textContent = `Applying ${filterType} filter...`;
             statusMessage.style.color = '#ff9f0a';
 
-            try {
-                const filterParams = {
-                    sample_name: selectedSample,
-                    filter_type: filterType,
-                    cutoff_frequency: cutoffFrequency
-                };
+            // Create filter parameters
+            const filterParams = {
+                sample_name: selectedSample,
+                filter_type: filterType,
+                cutoff_frequency: cutoffFrequency
+            };
 
-                // Add additional parameters for band pass and band stop filters
-                if (filterType === 'bandpass' || filterType === 'bandstop') {
-                    filterParams.center_frequency = centerFrequency;
-                    filterParams.bandwidth = bandwidth;
-                }
+            // Add additional parameters for band pass and band stop filters
+            if (filterType === 'bandpass' || filterType === 'bandstop') {
+                filterParams.center_frequency = centerFrequency;
+                filterParams.bandwidth = bandwidth;
+            }
 
-                const response = await fetch(`/sound_processing/apply_filter`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(filterParams)
-                });
+            console.log("Filter parameters:", filterParams);
 
+            // Make API call
+            fetch(`/sound_processing/apply_filter`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(filterParams)
+            })
+            .then(response => {
                 if (!response.ok) {
                     throw new Error(`Failed to apply filter: ${response.statusText}`);
                 }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Filter data received:", data);
 
-                const data = await response.json();
+                // Check if filtered_waveform exists
+                if (!data.filtered_waveform) {
+                    throw new Error("Invalid response: missing filtered waveform data");
+                }
 
                 // Store the filtered data
-                audioData.filteredWaveform = data.waveform;
+                audioData.filteredWaveform = data.filtered_waveform;
 
                 // Update charts
                 updateCharts();
 
-                // Update filtered audio element
+                // Update filtered audio element - set src directly on audio element
                 const filteredAudio = document.getElementById('filteredAudio');
-                const filteredAudioSource = document.getElementById('filteredAudioSource');
                 const timestamp = new Date().getTime(); // Add timestamp to prevent caching
-                filteredAudioSource.src = `/static/sound_samples/${selectedSample}_filtered.wav?t=${timestamp}`;
+                filteredAudio.src = `/static/sound_samples/${selectedSample}_filtered.wav?t=${timestamp}`;
+                console.log("Loading filtered audio from:", `/static/sound_samples/${selectedSample}_filtered.wav?t=${timestamp}`);
+
                 filteredAudio.load();
+
+                // Try to play the audio to verify it works (will be muted and will only work if user interacted with page)
+                filteredAudio.volume = 0;
+                filteredAudio.play().then(() => {
+                    console.log("Filtered audio loaded successfully");
+                    filteredAudio.pause();
+                    filteredAudio.currentTime = 0;
+                    filteredAudio.volume = 1;
+                }).catch(err => {
+                    console.log("Could not autoplay audio (this is normal):", err);
+                });
 
                 statusMessage.textContent = `${filterType} filter applied successfully`;
                 statusMessage.style.color = '#4cd964';
-            } catch (error) {
-                console.error('Error applying filter:', error);
+            })
+            .catch(error => {
+                console.error("Error applying filter:", error);
                 statusMessage.textContent = `Error: ${error.message}`;
                 statusMessage.style.color = '#ff3b30';
-            }
+            });
         }
 
         // Update filter controls based on filter type selection
@@ -581,6 +647,8 @@
             const cutoffFrequencyContainer = document.getElementById('cutoffFrequencyContainer');
             const centerFrequencyContainer = document.getElementById('centerFrequencyContainer');
             const bandwidthContainer = document.getElementById('bandwidthContainer');
+
+            console.log("Updating filter controls for type:", filterType);
 
             // Reset all to default display state
             cutoffFrequencyContainer.style.display = 'block';
@@ -600,13 +668,21 @@
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("Initializing sound processing page");
+
             // Initialize charts
             initCharts();
 
             // Set up event listeners
             document.getElementById('soundSample').addEventListener('change', loadSoundSample);
             document.getElementById('filterType').addEventListener('change', updateFilterControls);
-            document.getElementById('applyFilterBtn').addEventListener('click', applyFilter);
+
+            // Set up the apply filter button with direct onclick to ensure it works
+            const applyFilterBtn = document.getElementById('applyFilterBtn');
+            applyFilterBtn.onclick = function() {
+                console.log("Apply filter button clicked");
+                applyFilter();
+            };
 
             // Set up slider value displays
             function setupSlider(id, suffix = '') {
