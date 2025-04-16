@@ -1,16 +1,30 @@
+import io
 import os
+import time
 from typing import Any, Dict
 
 import numpy as np
-import scipy.io.wavfile as wavfile
+from PIL import Image
 from algorithms.signal_processing.fourier_transform import (run_fast_fourier_transform,
                                                             run_generate_signal, SignalType)
+from algorithms.signal_processing.image_compression import ImageCompressor, ImageCompressorMethod
+from algorithms.signal_processing.kalman_filter import KalmanFilterDataType
 from algorithms.signal_processing.sound_processing import SoundFrequencyFilter, FilterType
 from algorithms.signal_processing.sound_radar import SoundRadar, Position
 from flask import jsonify
 from scipy.signal import chirp
 
-SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'sound_samples')
+from data_manager import DataManager
+
+SOUND_SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'sound_samples')
+IMAGE_SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'image_samples')
+
+data_base = DataManager(url="https://yjadnucqabkcptxsbqgr.supabase.co",
+                        key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqYWRudWNxYWJrY3B0"
+                            "eHNicWdyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDc5MTQwOSwiZXhwIjoyMDYwMzY3NDA5fQ.79"
+                            "PnfXgeQw32Zp_q0e0179M-4TOj5H3c6Y0_bcJHQ88",
+                        bucket_name="algorithms-playground")
+data_base.create_client()
 
 
 class Converter:
@@ -35,8 +49,24 @@ class Converter:
         }
         return filter_map.get(filter_name)
 
+    @staticmethod
+    def image_compression_name_to_image_compression_method(compression_name: str) -> ImageCompressorMethod:
+        compression_name_map = {
+            'fft': ImageCompressorMethod.FFT,
+            'wavelet': ImageCompressorMethod.WAVELET
+        }
+        return compression_name_map.get(compression_name)
 
-def generate_signal(data: Any):
+    @staticmethod
+    def data_type_name_to_data_type(data_type_name: str) -> KalmanFilterDataType:
+        data_type_map = {
+            'audio': KalmanFilterDataType.AUDIO,
+            'stock': KalmanFilterDataType.STOCK
+        }
+        return data_type_map.get(data_type_name)
+
+
+def generate_signal(data: Dict[str, Any]):
     signal_name = data.get('signal_type', 'sine')
     signal_type = Converter.signal_name_to_signal_type(signal_name=signal_name)
 
@@ -59,7 +89,7 @@ def generate_signal(data: Any):
     })
 
 
-def fast_fourier_transform(data: Any):
+def fast_fourier_transform(data: Dict[str, Any]):
     signal = data.get('signal', [])
     sampling_rate = float(data.get('sampling_rate', 100.0))
 
@@ -78,11 +108,7 @@ def fast_fourier_transform(data: Any):
 
 def load_sample(data: Dict[str, Any]):
     sample_name = data.get('sample_name', 'piano')
-
-    os.makedirs(SAMPLES_DIR, exist_ok=True)
-
-    sample_path = os.path.join(SAMPLES_DIR, f"{sample_name}.wav")
-    sample_rate, waveform = wavfile.read(sample_path)
+    sample_rate, waveform = data_base.download_sound_sample(sample_name=sample_name)
 
     if len(waveform.shape) > 1 and waveform.shape[1] > 1:
         waveform = np.mean(waveform, axis=1)
@@ -92,12 +118,15 @@ def load_sample(data: Dict[str, Any]):
 
     return jsonify({
         'waveform': waveform.tolist(),
+        'filtered_waveform': [],
         'frequency': sample_rate
     })
 
 
 def apply_filter(data: Dict[str, Any]):
     sample_name = data.get('sample_name', 'piano')
+    sample_rate, waveform = data_base.download_sound_sample(sample_name=sample_name)
+
     filter_name = data.get('filter_type', 'lowpass')
     filter_type = Converter.filter_name_to_filter_type(filter_name=filter_name)
 
@@ -106,13 +135,16 @@ def apply_filter(data: Dict[str, Any]):
     bandwidth = data.get('bandwidth', 500)
 
     obj = SoundFrequencyFilter()
-    waveform = obj.run_apply_filter(sample_name=sample_name,
-                                    filter_type=filter_type,
-                                    cutoff_frequency=cutoff_frequency,
-                                    center_frequency=center_frequency,
-                                    bandwidth=bandwidth)
+    filtered_waveform = obj.run_apply_filter(waveform=waveform,
+                                             sample_rate=sample_rate,
+                                             sample_name=sample_name,
+                                             filter_type=filter_type,
+                                             cutoff_frequency=cutoff_frequency,
+                                             center_frequency=center_frequency,
+                                             bandwidth=bandwidth)
     return jsonify({
         'waveform': waveform.tolist(),
+        'filtered_waveform': filtered_waveform.tolist(),
         'frequency': 44100
     })
 
@@ -148,3 +180,83 @@ def sound_radar(data: Dict[str, Any]):
         },
         "error_meters": source_position.euclidean_distance(other_position=estimated_source_position)
     })
+
+
+def image_compression(data: Dict[str, Any]):
+    sample_name = data.get('image_name', 'lena')
+    image: Image = data_base.download_image_sample(sample_name=sample_name)
+
+    if image is None:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to load image sample: {sample_name}"
+        }), 500
+
+    compression_name = data.get('compression_method', 'fft')
+    compression_method = Converter.image_compression_name_to_image_compression_method(compression_name=compression_name)
+    compression_factor = float(data.get('compression_factor', 0.5))
+
+    compressed_image = None
+    image_compressor_obj = ImageCompressor(image=image)
+
+    if compression_method == ImageCompressorMethod.FFT:
+        compressed_image = image_compressor_obj.run_fft_compression(
+            compression_factor=compression_factor)
+    elif compression_method == ImageCompressorMethod.WAVELET:
+        compressed_image = image_compressor_obj.run_wavelet_compression(
+            compression_factor=compression_factor)
+
+    if compressed_image is None:
+        return jsonify({
+            "success": False,
+            "error": "Failed to compress image"
+        }), 500
+
+    compressed_img_buffer = io.BytesIO()
+    compressed_image = compressed_image.astype(np.uint8)
+    compressed_img_buffer.seek(0)
+
+    timestamp = int(time.time())
+    compressed_filename = f"{sample_name}_{compression_name}_{int(compression_factor * 100)}_{timestamp}_compressed.jpg"
+
+    results_folder = "compression-results"
+    try:
+        data_base.upload_image(file=compressed_img_buffer.getvalue(),
+                               folder_name=results_folder, file_name=compressed_filename)
+
+    except Exception as e:
+        print(f"Error uploading to storage: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Failed to upload compressed images: {str(e)}"
+        }), 500
+
+    original_size = len(compressed_img_buffer.getvalue()) / 1024  # KB
+    compressed_size = len(compressed_img_buffer.getvalue()) / 1024  # KB
+    compression_ratio = 1.0
+
+    try:
+        from skimage.metrics import peak_signal_noise_ratio
+        original_array = np.array(image)
+        psnr = peak_signal_noise_ratio(original_array, compressed_image)
+    except Exception:
+        psnr = 0
+
+    original_url = data_base.get_object_public_url(folder_name='image-samples', file_name=f'{sample_name}.jpg')
+    compressed_url = data_base.get_object_public_url(folder_name=results_folder, file_name=compressed_filename)
+
+    return jsonify({
+        "success": True,
+        "original_image_url": original_url,
+        "compressed_image_url": compressed_url,
+        "frequency_domain_url": '',
+        "coefficients_image_url": '',
+        "original_size": original_size,
+        "compressed_size": compressed_size,
+        "compression_ratio": compression_ratio,
+        "psnr": psnr
+    })
+
+
+def apply_kalman_filter(data: Dict[str, Any]):
+    pass
