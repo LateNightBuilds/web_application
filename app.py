@@ -7,7 +7,9 @@ from signal_processing_manager import (fast_fourier_transform,
                                        generate_signal,
                                        load_sample,
                                        apply_filter,
-                                       sound_radar)
+                                       sound_radar,
+                                       image_compression,
+                                       apply_kalman_filter)
 
 app = Flask(__name__)
 
@@ -55,6 +57,16 @@ def sound_processing_page():
 @app.route('/sound_radar')
 def sound_radar_page():
     return render_template('sound_radar.html')
+
+
+@app.route('/image_compression')
+def image_compression_page():
+    return render_template('image_compression.html')
+
+
+@app.route('/kalman_filter')
+def kalman_filter_page():
+    return render_template('kalman_filter.html')
 
 
 @app.route('/update', methods=['POST'])
@@ -156,14 +168,15 @@ def handle_apply_filter():
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
-@app.route('/sound_samples/<filename>')
-def serve_sound_sample(filename):
-    """Special route to serve sound samples directly if needed."""
-    from flask import send_from_directory
-    import os
-
-    samples_dir = os.path.join(app.static_folder, 'sound_samples')
-    return send_from_directory(samples_dir, filename)
+@app.route('/process_image_compression', methods=['POST'])
+def handle_image_compression():
+    try:
+        data = request.get_json()
+        json_file = image_compression(data=data)
+        return json_file
+    except Exception as e:
+        print(f"Error in Image Compression: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
 @app.route('/process_sound_radar', methods=['POST'])
@@ -175,6 +188,18 @@ def handle_sound_radar():
 
     except Exception as e:
         print(f"Error in Sound Radar processing: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/kalman_filter/apply', methods=['POST'])
+def handle_kalman_filter():
+    try:
+        data = request.get_json()
+        json_file = apply_kalman_filter(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error applying Kalman filter: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
