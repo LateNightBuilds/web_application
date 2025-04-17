@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TSP Solver - Simulated Annealing</title>
+    <style>
+        .cool-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .nav-icon {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #5ac8fa;
+            font-family: 'Fira Code', monospace;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .icon-container {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .icon-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: rgba(90, 200, 250, 0.1);
+            transform: scale(0.8);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .home-icon {
+            width: 30px;
+            height: 30px;
+            fill: none;
+            stroke: #5ac8fa;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .nav-text {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s;
+        }
+
+        /* Hover effects */
+        .nav-icon:hover .icon-circle {
+            transform: scale(1);
+            background-color: rgba(90, 200, 250, 0.2);
+            box-shadow: 0 0 15px rgba(90, 200, 250, 0.5);
+        }
+
+        .nav-icon:hover .home-icon {
+            transform: scale(1.1);
+            stroke-width: 2.2;
+        }
+
+        .nav-icon:hover .nav-text {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Active state */
+        .nav-icon:active .icon-circle {
+            transform: scale(0.9);
+            background-color: rgba(90, 200, 250, 0.3);
+        }
+
+        body {
+            font-family: 'Fira Code', monospace;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+        .mini-nav {
+            background-color: #1e1e1e;
+            padding: 6px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .mini-nav a {
+            color: #5ac8fa;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .mini-nav a:hover {
+            text-decoration: underline;
+        }
+        .header {
+            background-color: #1e1e1e;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        .title {
+            font-size: 32px;
+            color: #5ac8fa;
+            margin: 0;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #bbb;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .instructions {
+            padding: 15px;
+            background-color: #2c2c2e;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .instructions p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #bbb;
+        }
+        .instruction-title {
+            font-size: 16px;
+            color: #5ac8fa;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .control-panel {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .stats-panel {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .stats-title {
+            font-size: 18px;
+            color: #5ac8fa;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 130px;
+            background-color: #2c2c2e;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #bbb;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 22px;
+            color: #5ac8fa;
+            font-weight: bold;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #tspCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        .button {
+            padding: 10px 15px;
+            background-color: #5ac8fa;
+            color: #121212;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 120px;
+        }
+        .button:hover {
+            background-color: #48a4d9;
+        }
+        .button:disabled {
+            background-color: #3a3a3c;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .tool-group {
+            display: flex;
+            gap: 10px;
+        }
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .slider-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 180px;
+        }
+        .slider-container label {
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .slider-container input {
+            flex: 1;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .legend-start {
+            background-color: #4cd964;
+        }
+        .legend-end {
+            background-color: #ff3b30;
+        }
+        .legend-point {
+            background-color: #fff;
+        }
+        .legend-path {
+            width: 20px;
+            height: 2px;
+            background-color: #5ac8fa;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="cool-nav">
+        <a href="/" class="nav-icon">
+            <div class="icon-container">
+                <div class="icon-circle"></div>
+                <svg viewBox="0 0 24 24" class="home-icon">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <span class="nav-text">Home</span>
+        </a>
+    </div>
+
+    <div class="header">
+        <h1 class="title">Traveling Salesman Problem Solver</h1>
+        <p class="subtitle">Simulated Annealing Algorithm Visualization</p>
+    </div>
+
+    <div class="container">
+        <div class="instructions">
+            <h3 class="instruction-title">How to Use</h3>
+            <p><strong>Click on the canvas below</strong> to add points for the traveling salesman to visit.</p>
+            <p><strong>Drag existing points</strong> to reposition them on the map.</p>
+            <p>Click the <strong>Solve TSP</strong> button to find the optimal route using simulated annealing.</p>
+            <p>Use the <strong>Animation Speed</strong> slider to control how fast the route is drawn.</p>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color legend-start"></div>
+                    <span>Starting Point</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-end"></div>
+                    <span>Ending Point</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-point"></div>
+                    <span>Waypoint</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-path"></div>
+                    <span>Path</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="tool-group">
+                <button id="solveBtn" class="button">Solve TSP</button>
+                <button id="clearBtn" class="button">Clear Points</button>
+            </div>
+            <div class="animation-controls">
+                <div class="slider-container">
+                    <label for="animationSpeed">Animation Speed:</label>
+                    <input type="range" id="animationSpeed" min="1" max="100" value="50">
+                </div>
+                <button id="animateBtn" class="button" disabled>Animate Route</button>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h3 style="margin-top: 0; color: #5ac8fa; font-size: 16px;">Algorithm Parameters</h3>
+            <div class="slider-container" style="margin-bottom: 12px;">
+                <label for="initialTemp">Initial Temperature:</label>
+                <input type="range" id="initialTemp" min="100" max="5000" value="1000">
+                <span id="initialTempValue" style="min-width: 50px; text-align: right;">1000</span>
+            </div>
+            <div class="slider-container">
+                <label for="coolingRate">Cooling Rate:</label>
+                <input type="range" id="coolingRate" min="900" max="999" value="995">
+                <span id="coolingRateValue" style="min-width: 50px; text-align: right;">0.995</span>
+            </div>
+        </div>
+
+        <div class="stats-panel">
+            <h3 class="stats-title">Solution Information</h3>
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-label">Total Distance</div>
+                    <div id="distanceStat" class="stat-value">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Number of Points</div>
+                    <div id="pointsStat" class="stat-value">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Algorithm Iterations</div>
+                    <div id="iterationsStat" class="stat-value">-</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Execution Time</div>
+                    <div id="timeStat" class="stat-value">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="tspCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const POINT_RADIUS = 8;
+        const START_POINT_COLOR = '#4cd964'; // Green
+        const END_POINT_COLOR = '#ff3b30';   // Red
+        const POINT_COLOR = '#ffffff';       // White
+        const PATH_COLOR = '#5ac8fa';        // Blue
+        const DRAGGING_THRESHOLD = 5;
+
+        // DOM Elements
+        const canvas = document.getElementById('tspCanvas');
+        const ctx = canvas.getContext('2d');
+        const solveBtn = document.getElementById('solveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const animateBtn = document.getElementById('animateBtn');
+        const animationSpeedSlider = document.getElementById('animationSpeed');
+        const initialTempSlider = document.getElementById('initialTemp');
+        const initialTempValue = document.getElementById('initialTempValue');
+        const coolingRateSlider = document.getElementById('coolingRate');
+        const coolingRateValue = document.getElementById('coolingRateValue');
+        const distanceStat = document.getElementById('distanceStat');
+        const pointsStat = document.getElementById('pointsStat');
+        const iterationsStat = document.getElementById('iterationsStat');
+        const timeStat = document.getElementById('timeStat');
+
+        // Variables
+        let points = [];
+        let solution = null;
+        let isDragging = false;
+        let dragPointIndex = -1;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let animationInProgress = false;
+        let animationProgress = 0;
+        let lastAnimationTimestamp = 0;
+        let animationRequestId = null;
+
+        // Initialize
+        function initCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            drawCanvas();
+
+            // Event Listeners
+            canvas.addEventListener('mousedown', onCanvasMouseDown);
+            canvas.addEventListener('mousemove', onCanvasMouseMove);
+            canvas.addEventListener('mouseup', onCanvasMouseUp);
+            canvas.addEventListener('mouseleave', onCanvasMouseUp);
+
+            // Touch support
+            canvas.addEventListener('touchstart', onCanvasTouchStart);
+            canvas.addEventListener('touchmove', onCanvasTouchMove);
+            canvas.addEventListener('touchend', onCanvasTouchEnd);
+
+            // Setup sliders
+            initialTempSlider.addEventListener('input', function() {
+                initialTempValue.textContent = this.value;
+            });
+
+            coolingRateSlider.addEventListener('input', function() {
+                const value = (parseInt(this.value) / 1000).toFixed(3);
+                coolingRateValue.textContent = value;
+            });
+        }
+
+        // Add a point when clicking on empty canvas area
+        function onCanvasMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check if clicked on existing point
+            const pointIndex = findPointAt(x, y);
+
+            if (pointIndex >= 0) {
+                // Start dragging the point
+                isDragging = true;
+                dragPointIndex = pointIndex;
+                dragStartX = x;
+                dragStartY = y;
+            } else {
+                // Add new point
+                points.push({ x, y });
+                pointsStat.textContent = points.length;
+
+                // Reset solution when adding new points
+                resetSolution();
+                drawCanvas();
+            }
+        }
+
+        function onCanvasMouseMove(e) {
+            if (isDragging && dragPointIndex >= 0) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Update point position
+                points[dragPointIndex].x = x;
+                points[dragPointIndex].y = y;
+
+                // Reset solution when moving points
+                resetSolution();
+                drawCanvas();
+            }
+        }
+
+        function onCanvasMouseUp() {
+            isDragging = false;
+            dragPointIndex = -1;
+        }
+
+        // Touch support functions
+        function onCanvasTouchStart(e) {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                onCanvasMouseDown(mouseEvent);
+            }
+        }
+
+        function onCanvasTouchMove(e) {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                onCanvasMouseMove(mouseEvent);
+            }
+        }
+
+        function onCanvasTouchEnd(e) {
+            e.preventDefault();
+            onCanvasMouseUp();
+        }
+
+        // Find if there's a point at the given coordinates
+        function findPointAt(x, y) {
+            for (let i = 0; i < points.length; i++) {
+                const dx = points[i].x - x;
+                const dy = points[i].y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance <= POINT_RADIUS + DRAGGING_THRESHOLD) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // Draw canvas with all points and path
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw solution path if available
+            if (solution && solution.path && !animationInProgress) {
+                drawSolutionPath(solution.path);
+            }
+
+            // Draw animated path if animation is in progress
+            if (animationInProgress && solution && solution.path) {
+                drawAnimatedPath(solution.path, animationProgress);
+            }
+
+            // Draw points on top of path
+            drawPoints();
+        }
+
+        // Draw all points
+        function drawPoints() {
+            // If we have a solution, draw points with the correct order numbering
+            if (solution && solution.path) {
+                for (let i = 0; i < solution.path.length; i++) {
+                    const point = solution.path[i];
+
+                    // Determine point color based on position
+                    let color = POINT_COLOR;
+                    if (i === 0) {
+                        color = START_POINT_COLOR;
+                    } else if (i === solution.path.length - 1) {
+                        color = END_POINT_COLOR;
+                    }
+
+                    // Draw the point
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, POINT_RADIUS, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+
+                    // Only show index if we're not in animation mode
+                    if (!animationInProgress && solution.path.length > 2) {
+                        ctx.fillStyle = '#000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.font = '10px Arial';
+                        ctx.fillText(i + 1, point.x, point.y);
+                    }
+                }
+            } else {
+                // No solution yet, just draw the points
+                for (let i = 0; i < points.length; i++) {
+                    ctx.beginPath();
+                    ctx.arc(points[i].x, points[i].y, POINT_RADIUS, 0, Math.PI * 2);
+                    ctx.fillStyle = POINT_COLOR;
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Calculate the total distance of a path
+        function calculatePathDistance(path) {
+            if (!path || path.length < 2) return 0;
+
+            let totalDistance = 0;
+
+            for (let i = 0; i < path.length - 1; i++) {
+                const dx = path[i+1].x - path[i].x;
+                const dy = path[i+1].y - path[i].y;
+                totalDistance += Math.sqrt(dx * dx + dy * dy);
+            }
+
+            return totalDistance;
+        }
+
+        // Draw the complete solution path
+        function drawSolutionPath(path) {
+            if (path.length < 2) return;
+
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+
+            // Draw exactly the path provided by the algorithm
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
+            }
+
+            // Don't close the path automatically - just draw what the algorithm returned
+
+            ctx.strokeStyle = PATH_COLOR;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Draw an animated path based on progress (0-1)
+        function drawAnimatedPath(path, progress) {
+            if (path.length < 2) return;
+
+            const totalSegments = path.length - 1;
+            const progressValue = progress * totalSegments;
+            const currentSegment = Math.min(Math.floor(progressValue), totalSegments - 1);
+            const segmentProgress = progressValue - currentSegment;
+
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+
+            // Draw completed segments
+            for (let i = 1; i <= currentSegment; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
+            }
+
+            // Draw partial segment
+            if (currentSegment < totalSegments) {
+                const startX = path[currentSegment].x;
+                const startY = path[currentSegment].y;
+                const endX = path[currentSegment + 1].x;
+                const endY = path[currentSegment + 1].y;
+
+                const currX = startX + (endX - startX) * segmentProgress;
+                const currY = startY + (endY - startY) * segmentProgress;
+
+                ctx.lineTo(currX, currY);
+            }
+
+            ctx.strokeStyle = PATH_COLOR;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Reset solution data
+        function resetSolution() {
+            solution = null;
+            animationInProgress = false;
+            if (animationRequestId) {
+                cancelAnimationFrame(animationRequestId);
+                animationRequestId = null;
+            }
+
+            // Update UI
+            distanceStat.textContent = "-";
+            iterationsStat.textContent = "-";
+            timeStat.textContent = "-";
+            animateBtn.disabled = true;
+        }
+
+        // Solve the TSP problem
+        async function solveTSP() {
+            if (points.length < 3) {
+                alert("Please add at least 3 points");
+                return;
+            }
+
+            try {
+                solveBtn.disabled = true;
+                solveBtn.textContent = "Solving...";
+
+                // Get algorithm parameters
+                const initialTemp = parseInt(initialTempSlider.value);
+                const coolingRate = parseFloat(coolingRateSlider.value) / 1000;
+
+                // Send points to backend
+                const response = await fetch('/solve_tsp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        points: points,
+                        initial_temp: initialTemp,
+                        cooling_rate: coolingRate
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || "Unknown error");
+                }
+
+                // Store solution
+                solution = {
+                    path: data.path,
+                    distance: calculatePathDistance(data.path) // Calculate distance ourselves
+                };
+
+                // Update stats
+                distanceStat.textContent = solution.distance.toFixed(2);
+                pointsStat.textContent = data.path.length;
+                iterationsStat.textContent = "N/A"; // Not provided by backend
+                timeStat.textContent = "N/A"; // Not provided by backend
+
+                // Enable animation button
+                animateBtn.disabled = false;
+
+                // Draw solution
+                drawCanvas();
+
+            } catch (error) {
+                console.error("Error solving TSP:", error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                solveBtn.disabled = false;
+                solveBtn.textContent = "Solve TSP";
+            }
+        }
+
+        // Animate the solution path
+        function animateSolution() {
+            if (!solution || !solution.path || solution.path.length < 2) {
+                return;
+            }
+
+            // Disable controls during animation
+            animateBtn.disabled = true;
+
+            // Start animation
+            animationInProgress = true;
+            animationProgress = 0;
+
+            // Get animation start timestamp
+            lastAnimationTimestamp = performance.now();
+
+            // Start animation loop
+            animationRequestId = requestAnimationFrame(updateAnimation);
+        }
+
+        // Update animation frame
+        function updateAnimation(timestamp) {
+            // Calculate elapsed time
+            const deltaTime = timestamp - lastAnimationTimestamp;
+            lastAnimationTimestamp = timestamp;
+
+            // Get animation speed from slider (1-100)
+            const speed = parseInt(animationSpeedSlider.value);
+
+            // Calculate progress increment
+            // Higher speed means faster animation
+            const increment = (deltaTime / 1000) * (speed / 20);
+
+            // Update progress
+            animationProgress += increment;
+
+            // Check if animation is complete
+            if (animationProgress >= 1) {
+                animationProgress = 1;
+                animationInProgress = false;
+                animateBtn.disabled = false;
+            }
+
+            // Redraw canvas
+            drawCanvas();
+
+            // Continue animation if not complete
+            if (animationInProgress) {
+                animationRequestId = requestAnimationFrame(updateAnimation);
+            }
+        }
+
+        // Clear all points
+        function clearPoints() {
+            points = [];
+            resetSolution();
+            pointsStat.textContent = "0";
+            drawCanvas();
+        }
+
+        // Initialize event listeners for buttons
+        function initButtons() {
+            solveBtn.addEventListener('click', solveTSP);
+            clearBtn.addEventListener('click', clearPoints);
+            animateBtn.addEventListener('click', animateSolution);
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                // Resize canvas
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+
+                // Redraw everything
+                drawCanvas();
+            });
+        }
+
+        // Initialize everything on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            initCanvas();
+            initButtons();
+        });
+    </script>
+</body>
+</html>
