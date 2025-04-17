@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify
 from graph_manager import (shortest_path_algorithm,
                            graph_search_algorithm,
                            minimum_spanning_tree)
+from machine_learning_manager import regularization_impact
 from signal_processing_manager import (fast_fourier_transform,
                                        generate_signal,
                                        load_sample,
@@ -67,6 +68,11 @@ def image_compression_page():
 @app.route('/kalman_filter')
 def kalman_filter_page():
     return render_template('kalman_filter.html')
+
+
+@app.route('/regularization')
+def regularization_page():
+    return render_template('regularization.html')
 
 
 @app.route('/update', methods=['POST'])
@@ -200,6 +206,18 @@ def handle_kalman_filter():
 
     except Exception as e:
         print(f"Error applying Kalman filter: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/process_regularization', methods=['POST'])
+def handle_regularization():
+    try:
+        data = request.get_json()
+        json_file = regularization_impact(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error in regularization processing: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 
