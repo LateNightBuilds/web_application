@@ -416,8 +416,28 @@
             </div>
         </div>
 
+        <div class="section-header">Optimization Methods</div>
+        <div class="card-container">
+            <div class="card">
+                <div class="card-image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#5ac8fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <path d="M12 8v8"></path>
+                        <path d="M8 12h8"></path>
+                        <path d="M17 17l-5-5"></path>
+                        <path d="M8 8l2.5 2.5"></path>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <h2>Simulated Annealing</h2>
+                    <p>Solving Traveling Salesman Problem</p>
+                    <a href="/simulated_annealing" class="button">View</a>
+                </div>
+            </div>
+        </div>
+
     <footer>
-        <p>Algorithm Visualizer &copy; 2023 - An interactive learning tool for computer science algorithms</p>
+        <p>Algorithm Visualizer &copy; 2025 - An interactive learning tool for cool algorithms</p>
     </footer>
 
     <script>
@@ -425,6 +445,14 @@
         const sections = document.querySelectorAll('.section-header');
         const scrollIndicator = document.getElementById('scrollIndicator');
         let currentSectionIndex = 0;
+
+        // Section names for cleaner display
+        const sectionNames = {
+            "Graph Algorithms": "Graph Algorithms",
+            "Signal Processing": "Signal Processing",
+            "Machine Learning": "Machine Learning",
+            "Optimization Methods": "Optimization Methods"
+        };
 
         // Function to scroll to the next section when clicking the scroll indicator
         function scrollToNextSection() {
@@ -437,6 +465,12 @@
             }
         }
 
+        // Helper function to get clean section name
+        function getSectionName(section) {
+            const text = section.textContent.trim();
+            return sectionNames[text] || text;
+        }
+
         // Update scroll indicator based on scroll position
         window.addEventListener('scroll', function() {
             const scrollPosition = window.scrollY;
@@ -446,21 +480,22 @@
             // Calculate how close we are to the bottom
             const distanceFromBottom = documentHeight - (scrollPosition + windowHeight);
 
-            // Update current section index based on scroll position
+            // Determine which section we're currently viewing
+            let newSectionIndex = 0;
             for (let i = 0; i < sections.length; i++) {
                 const sectionTop = sections[i].getBoundingClientRect().top + window.scrollY;
-                if (window.scrollY + 100 >= sectionTop) {
-                    currentSectionIndex = i;
+                // Use a threshold of 150px to determine when we've scrolled past a section
+                if (window.scrollY + 150 >= sectionTop) {
+                    newSectionIndex = i;
                 }
             }
 
-            // Update scroll indicator label based on current section
-            const scrollLabel = scrollIndicator.querySelector('.scroll-label');
-            if (currentSectionIndex + 1 < sections.length) {
-                const nextSectionText = sections[currentSectionIndex + 1].textContent;
-                scrollLabel.textContent = `Explore ${nextSectionText}!`;
-            } else {
-                scrollLabel.textContent = "You've seen it all!";
+            // Only update if the section changed
+            if (newSectionIndex !== currentSectionIndex) {
+                currentSectionIndex = newSectionIndex;
+
+                // Update scroll indicator label based on current section
+                updateScrollLabel();
             }
 
             // Hide indicator when at the bottom of the page
@@ -473,6 +508,30 @@
                 scrollIndicator.style.transform = 'translateY(0)';
                 scrollIndicator.style.pointerEvents = 'auto';
             }
+        });
+
+        // Update scroll label text
+        function updateScrollLabel() {
+            const scrollLabel = scrollIndicator.querySelector('.scroll-label');
+
+            if (currentSectionIndex + 1 < sections.length) {
+                // Get the text of the next section header
+                const nextSection = sections[currentSectionIndex + 1];
+                const nextSectionName = getSectionName(nextSection);
+                scrollLabel.textContent = `Explore ${nextSectionName}!`;
+            } else {
+                scrollLabel.textContent = "You've seen it all!";
+            }
+        }
+
+        // Initialize scroll label on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial scroll label
+            updateScrollLabel();
+
+            // Make sure the correct section is active based on initial scroll position
+            const scrollEvent = new Event('scroll');
+            window.dispatchEvent(scrollEvent);
         });
     </script>
 </body>
