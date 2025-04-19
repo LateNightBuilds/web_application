@@ -136,10 +136,6 @@ def shortest_path_algorithm(data: Any):
         'cost': cost
     }
 
-    # Save the grid data as JSON for future reference
-    with open('grid_data.json', 'w') as f:
-        json.dump(result_data, f, indent=2)
-
     return jsonify({
         "message": f"Algorithm {algorithm_name} completed successfully. Path cost: {cost}",
         "history": formatted_history,
