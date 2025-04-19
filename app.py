@@ -5,13 +5,13 @@ from src.graph_manager import (shortest_path_algorithm,
                                minimum_spanning_tree)
 from src.machine_learning_manager import regularization_impact
 from src.optimization_manager import simulated_annealing_tsp
-from signal_processing_manager import (fast_fourier_transform,
-                                       generate_signal,
-                                       load_sample,
-                                       apply_filter,
-                                       sound_radar,
-                                       image_compression,
-                                       apply_kalman_filter)
+from src.signal_processing_manager import (fast_fourier_transform,
+                                           generate_signal,
+                                           load_sample,
+                                           apply_filter,
+                                           sound_radar,
+                                           image_compression,
+                                           apply_kalman_filter)
 
 app = Flask(__name__)
 
@@ -239,4 +239,4 @@ def handle_run_simulated_annealing_tsp():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8081)
+    app.run(host='0.0.0.0', debug=True, port=8081)
