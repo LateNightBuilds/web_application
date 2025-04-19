@@ -14,7 +14,7 @@ from algorithms.signal_processing.sound_radar import SoundRadar, Position
 from flask import jsonify
 from scipy.signal import chirp
 
-from data_manager import DataManager
+from src.data_manager import DataManager
 
 SOUND_SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'sound_samples')
 IMAGE_SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'image_samples')

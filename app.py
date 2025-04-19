@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, jsonify
 
-from graph_manager import (shortest_path_algorithm,
-                           graph_search_algorithm,
-                           minimum_spanning_tree)
-from machine_learning_manager import regularization_impact
-from optimization_manager import simulated_annealing_tsp
+from src.graph_manager import (shortest_path_algorithm,
+                               graph_search_algorithm,
+                               minimum_spanning_tree)
+from src.machine_learning_manager import regularization_impact
+from src.optimization_manager import simulated_annealing_tsp
 from signal_processing_manager import (fast_fourier_transform,
                                        generate_signal,
                                        load_sample,
