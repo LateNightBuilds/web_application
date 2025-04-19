@@ -129,13 +129,6 @@ def shortest_path_algorithm(data: Any):
     cost, history = run_shortest_path_algorithm(g=graph, method=method)
     formatted_history = FormatHistoryToFrontend.format_shortest_path_algorithm(history=history)
 
-    result_data = {
-        'algorithm': algorithm_name,
-        'grid': grid_data,
-        'history': formatted_history,
-        'cost': cost
-    }
-
     return jsonify({
         "message": f"Algorithm {algorithm_name} completed successfully. Path cost: {cost}",
         "history": formatted_history,
