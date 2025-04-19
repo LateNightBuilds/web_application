@@ -1,4 +1,3 @@
-import json
 from typing import List, Tuple, Any, Dict
 
 import networkx as nx
@@ -158,17 +157,6 @@ def graph_search_algorithm(data: Any):
 
     formatted_history = FormatHistoryToFrontend.format_graph_search_algorithm(history=history)
 
-    result_data = {
-        'algorithm': algorithm_name,
-        'grid': graph_data,
-        'history': formatted_history,
-        'success': success
-    }
-
-    # Save the grid data as JSON for future reference
-    with open('grid_data.json', 'w') as f:
-        json.dump(result_data, f, indent=2)
-
     return jsonify({
         "message": f"Algorithm {algorithm_name} completed successfully. Path connected: {success}",
         "history": formatted_history,
@@ -186,18 +174,6 @@ def minimum_spanning_tree(data: Any):
     formatted_history = FormatHistoryToFrontend.format_minimum_spanning_tree(history=history)
 
     total_weight = sum(weight for _, _, weight in mst_result)
-
-    result_data = {
-        'algorithm': algorithm_name,
-        'graph': graph_data,
-        'history': formatted_history,
-        'total_weight': total_weight,
-        'mst_edges': mst_result
-    }
-
-    # Save the MST data as JSON for future reference
-    with open('mst_data.json', 'w') as f:
-        json.dump(result_data, f, indent=2)
 
     return jsonify({
         "message": f"MST Algorithm {algorithm_name} completed successfully.",
