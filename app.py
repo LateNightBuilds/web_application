@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request, jsonify
 
 from src.graph_manager import (shortest_path_algorithm,
@@ -226,6 +228,7 @@ def handle_regularization():
         print(f"Error in regularization processing: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
+
 @app.route('/solve_tsp', methods=['POST'])
 def handle_run_simulated_annealing_tsp():
     try:
@@ -239,4 +242,5 @@ def handle_run_simulated_annealing_tsp():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=8081)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
