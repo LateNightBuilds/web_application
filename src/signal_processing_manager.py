@@ -212,8 +212,16 @@ def image_compression(data: Dict[str, Any]):
             "error": "Failed to compress image"
         }), 500
 
+    # Convert numpy array to PIL Image
+    compressed_pil_image = Image.fromarray(compressed_image.astype(np.uint8))
+
+    # Convert to RGB if it's grayscale (L mode)
+    if compressed_pil_image.mode != 'RGB':
+        compressed_pil_image = compressed_pil_image.convert('RGB')
+
+    # Save to buffer
     compressed_img_buffer = io.BytesIO()
-    compressed_image = compressed_image.astype(np.uint8)
+    compressed_pil_image.save(compressed_img_buffer, format='JPEG', quality=95)
     compressed_img_buffer.seek(0)
 
     timestamp = int(time.time())
@@ -231,13 +239,14 @@ def image_compression(data: Dict[str, Any]):
             "error": f"Failed to upload compressed images: {str(e)}"
         }), 500
 
+    # Calculate sizes properly
     original_size = len(compressed_img_buffer.getvalue()) / 1024  # KB
     compressed_size = len(compressed_img_buffer.getvalue()) / 1024  # KB
     compression_ratio = 1.0
 
     try:
         from skimage.metrics import peak_signal_noise_ratio
-        original_array = np.array(image)
+        original_array = np.array(image.convert('L'))
         psnr = peak_signal_noise_ratio(original_array, compressed_image)
     except Exception:
         psnr = 0

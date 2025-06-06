@@ -285,29 +285,27 @@
             overflow-y: auto;
             display: none;
         }
-
-        /* Styles for direct image display */
-        .direct-image-container {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
+        .hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="cool-nav">
-    <a href="/" class="nav-icon">
-        <div class="icon-container">
-            <div class="icon-circle"></div>
-            <svg viewBox="0 0 24 24" class="home-icon">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-        </div>
-        <span class="nav-text">Home</span>
-    </a>
-</div>
+        <a href="/" class="nav-icon">
+            <div class="icon-container">
+                <div class="icon-circle"></div>
+                <svg viewBox="0 0 24 24" class="home-icon">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <span class="nav-text">Home</span>
+        </a>
+    </div>
 
     <div class="section">
         <h2>Image Compression</h2>
@@ -350,13 +348,13 @@
 
                 <div class="metrics">
                     <h3>Compression Metrics</h3>
-                    <p>Original Size: <span id="originalSize">0</span> KB</p>
-                    <p>Compressed Size: <span id="compressedSize">0</span> KB</p>
-                    <p>Compression Ratio: <span id="compressionRatio">0</span>:1</p>
-                    <p>PSNR: <span id="psnr">0</span> dB</p>
+                    <p>Original Size: <span id="originalSize">-</span> KB</p>
+                    <p>Compressed Size: <span id="compressedSize">-</span> KB</p>
+                    <p>Compression Ratio: <span id="compressionRatio">-</span>:1</p>
+                    <p>PSNR: <span id="psnr">-</span> dB</p>
                 </div>
 
-                <div class="status-message" id="statusMessage">Select an image and compression settings</div>
+                <div class="status-message" id="statusMessage">Loading default image...</div>
 
                 <button id="toggleDebug" style="margin-top: 10px;">Show Debug Info</button>
                 <div id="debug-info"></div>
@@ -366,8 +364,8 @@
                 <div class="image-container">
                     <div class="image-row">
                         <div class="image-display">
-                            <div id="originalImagePlaceholder" class="image-placeholder">Original image</div>
-                            <img id="originalImage" src="/static/images/lena.jpg" alt="Original Image">
+                            <div id="originalImagePlaceholder" class="image-placeholder">Loading original image...</div>
+                            <img id="originalImage" src="" alt="Original Image" style="display: none;">
                             <div class="image-label">Original</div>
                         </div>
                         <div class="image-display">
@@ -411,6 +409,10 @@
         const debugInfo = document.getElementById('debug-info');
         const toggleDebugBtn = document.getElementById('toggleDebug');
 
+        // Current image selection
+        let currentImage = 'lena';
+        let isInitialLoad = true;
+
         // Debug log function
         function debugLog(message, data = null) {
             const timestamp = new Date().toISOString().substr(11, 12);
@@ -438,9 +440,6 @@
             }
         });
 
-        // Current image selection
-        let currentImage = 'lena';
-
         // Update compression factor display
         compressionFactorSlider.addEventListener('input', function() {
             compressionFactorValue.textContent = this.value;
@@ -451,11 +450,8 @@
             // Update current image
             currentImage = this.value;
 
-            // Update image src with cache-busting
-            const timestamp = new Date().getTime();
-            originalImage.src = `/static/images/${currentImage}.jpg?t=${timestamp}`;
-
-            debugLog(`Selected image: ${currentImage}, updated src: ${originalImage.src}`);
+            // Load the new image
+            loadDefaultImage();
 
             // Reset compression results
             resetResults();
@@ -472,20 +468,134 @@
             compressedImagePlaceholder.style.display = 'flex';
 
             // Reset metrics
-            originalSizeDisplay.textContent = '0';
-            compressedSizeDisplay.textContent = '0';
-            compressionRatioDisplay.textContent = '0';
-            psnrDisplay.textContent = '0';
+            originalSizeDisplay.textContent = '-';
+            compressedSizeDisplay.textContent = '-';
+            compressionRatioDisplay.textContent = '-';
+            psnrDisplay.textContent = '-';
         }
 
-        // Handle image load errors
-        function handleImageError(img, placeholder, errorMessage) {
-            const imgSrc = img.src;
-            debugLog(`Image error: ${errorMessage}, src: ${imgSrc}`);
+        // Load default image
+        async function loadDefaultImage() {
+            statusMessage.textContent = `Loading ${currentImage} image...`;
+            statusMessage.style.color = '#ff9f0a';
 
-            img.style.display = 'none';
-            placeholder.style.display = 'flex';
-            placeholder.textContent = errorMessage || 'Failed to load image';
+            try {
+                // First try to load from the database by making a minimal compression request
+                const response = await fetch('/process_image_compression', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image_name: currentImage,
+                        compression_method: 'fft',
+                        compression_factor: 0.95  // Minimal compression just to get the original URL
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success && result.original_image_url) {
+                    debugLog(`Loading image from URL: ${result.original_image_url}`);
+
+                    // Set up image load handlers
+                    originalImage.onload = function() {
+                        debugLog('Image loaded successfully');
+                        originalImagePlaceholder.style.display = 'none';
+                        originalImage.style.display = 'block';
+                        statusMessage.textContent = 'Image loaded. Adjust settings and press "Compress Image"';
+                        statusMessage.style.color = '#4cd964';
+
+                        // Auto-compress on first load
+                        if (isInitialLoad) {
+                            isInitialLoad = false;
+                            setTimeout(() => {
+                                debugLog('Running initial compression');
+                                compressBtn.click();
+                            }, 500);
+                        }
+                    };
+
+                    originalImage.onerror = function() {
+                        debugLog('Failed to load image from URL');
+                        // Try static paths as fallback
+                        tryStaticPaths();
+                    };
+
+                    // Add cache busting
+                    const timestamp = new Date().getTime();
+                    const url = result.original_image_url.includes('?')
+                        ? `${result.original_image_url}&t=${timestamp}`
+                        : `${result.original_image_url}?t=${timestamp}`;
+
+                    originalImage.src = url;
+                } else {
+                    throw new Error('No image URL in response');
+                }
+            } catch (error) {
+                debugLog('Error loading from database:', error.message);
+                // Try static paths as fallback
+                tryStaticPaths();
+            }
+        }
+
+        // Try loading from static paths
+        function tryStaticPaths() {
+            const staticPaths = [
+                `/static/image_samples/${currentImage}.jpg`,
+                `/static/images/${currentImage}.jpg`,
+                `/static/${currentImage}.jpg`
+            ];
+
+            debugLog('Trying static paths:', staticPaths);
+            tryNextPath(staticPaths, 0);
+        }
+
+        // Recursively try static paths
+        function tryNextPath(paths, index) {
+            if (index >= paths.length) {
+                // All paths failed
+                originalImagePlaceholder.style.display = 'flex';
+                originalImagePlaceholder.textContent = 'Failed to load image';
+                originalImage.style.display = 'none';
+                statusMessage.textContent = 'Failed to load image from any source';
+                statusMessage.style.color = '#ff3b30';
+                return;
+            }
+
+            const testPath = paths[index];
+            debugLog(`Trying path: ${testPath}`);
+
+            const testImage = new Image();
+            testImage.onload = function() {
+                debugLog(`Success with path: ${testPath}`);
+                originalImage.src = testPath;
+                originalImagePlaceholder.style.display = 'none';
+                originalImage.style.display = 'block';
+                statusMessage.textContent = 'Image loaded. Select settings and press "Compress Image"';
+                statusMessage.style.color = '#4cd964';
+
+                // Auto-compress on first load
+                if (isInitialLoad) {
+                    isInitialLoad = false;
+                    setTimeout(() => {
+                        debugLog('Running initial compression');
+                        compressBtn.click();
+                    }, 500);
+                }
+            };
+
+            testImage.onerror = function() {
+                debugLog(`Failed with path: ${testPath}`);
+                // Try next path
+                tryNextPath(paths, index + 1);
+            };
+
+            testImage.src = testPath;
         }
 
         // Handle compression
@@ -502,7 +612,7 @@
 
             try {
                 const method = compressionMethodSelect.value;
-                const factor = compressionFactorSlider.value;
+                const factor = parseFloat(compressionFactorSlider.value);
 
                 debugLog('Starting compression', {
                     image: currentImage,
@@ -536,53 +646,34 @@
                 }
 
                 // Update metrics
-                originalSizeDisplay.textContent = result.original_size.toFixed(2);
-                compressedSizeDisplay.textContent = result.compressed_size.toFixed(2);
-                compressionRatioDisplay.textContent = result.compression_ratio.toFixed(2);
-                psnrDisplay.textContent = result.psnr.toFixed(2);
+                if (result.original_size) originalSizeDisplay.textContent = result.original_size.toFixed(2);
+                if (result.compressed_size) compressedSizeDisplay.textContent = result.compressed_size.toFixed(2);
+                if (result.compression_ratio) compressionRatioDisplay.textContent = result.compression_ratio.toFixed(2);
+                if (result.psnr !== undefined) psnrDisplay.textContent = result.psnr.toFixed(2);
 
-                // NEW APPROACH: Display the compressed image from its URL directly
+                // Display the compressed image
                 if (result.compressed_image_url) {
                     debugLog(`Setting compressed image src: ${result.compressed_image_url}`);
 
-                    // Use fetch to get the image data directly
-                    try {
-                        // Create a new image element and set the src
-                        compressedImage.onload = function() {
-                            debugLog('Compressed image loaded successfully');
-                            compressedImagePlaceholder.style.display = 'none';
-                            compressedImage.style.display = 'block';
-                        };
+                    compressedImage.onload = function() {
+                        debugLog('Compressed image loaded successfully');
+                        compressedImagePlaceholder.style.display = 'none';
+                        compressedImage.style.display = 'block';
+                    };
 
-                        compressedImage.onerror = function() {
-                            debugLog('Error loading compressed image');
-                            compressedImagePlaceholder.style.display = 'flex';
-                            compressedImagePlaceholder.textContent = 'Failed to load compressed image';
-                        };
-
-                        // Add cache busting
-                        const timestamp = new Date().getTime();
-                        const url = result.compressed_image_url.includes('?')
-                            ? `${result.compressed_image_url}&t=${timestamp}`
-                            : `${result.compressed_image_url}?t=${timestamp}`;
-
-                        compressedImage.src = url;
-
-                        // Also update original image if URL provided
-                        if (result.original_image_url) {
-                            const origTimestamp = new Date().getTime();
-                            const origUrl = result.original_image_url.includes('?')
-                                ? `${result.original_image_url}&t=${origTimestamp}`
-                                : `${result.original_image_url}?t=${origTimestamp}`;
-
-                            originalImage.src = origUrl;
-                            debugLog(`Set original image src: ${origUrl}`);
-                        }
-
-                    } catch (fetchError) {
-                        debugLog(`Error fetching image: ${fetchError.message}`);
+                    compressedImage.onerror = function() {
+                        debugLog('Error loading compressed image');
+                        compressedImagePlaceholder.style.display = 'flex';
                         compressedImagePlaceholder.textContent = 'Failed to load compressed image';
-                    }
+                    };
+
+                    // Add cache busting
+                    const timestamp = new Date().getTime();
+                    const url = result.compressed_image_url.includes('?')
+                        ? `${result.compressed_image_url}&t=${timestamp}`
+                        : `${result.compressed_image_url}?t=${timestamp}`;
+
+                    compressedImage.src = url;
                 } else {
                     debugLog('No compressed_image_url in response');
                     compressedImagePlaceholder.textContent = 'No compressed image URL provided';
@@ -599,6 +690,8 @@
 
                 // Keep placeholders visible
                 compressedImage.style.display = 'none';
+                compressedImagePlaceholder.style.display = 'flex';
+                compressedImagePlaceholder.textContent = 'Compression failed';
 
             } finally {
                 compressBtn.disabled = false;
@@ -613,21 +706,8 @@
             // Set initial compression factor display
             compressionFactorValue.textContent = compressionFactorSlider.value;
 
-            // Set initial status message
-            statusMessage.textContent = 'Select compression settings and press "Compress Image"';
-
-            // Setup error handler for original image
-            originalImage.onerror = function() {
-                debugLog('Failed to load initial original image');
-                statusMessage.textContent = 'Failed to load original image. Check server configuration.';
-                statusMessage.style.color = '#ff3b30';
-            };
-
-            originalImage.onload = function() {
-                debugLog('Initial original image loaded successfully');
-                originalImagePlaceholder.style.display = 'none';
-                originalImage.style.display = 'block';
-            };
+            // Load the default image
+            loadDefaultImage();
         }
 
         // Start when page loads
