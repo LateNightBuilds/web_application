@@ -88,64 +88,155 @@
             background-color: #121212;
             color: #e0e0e0;
         }
-        .mini-nav {
-            background-color: #1e1e1e;
-            padding: 6px;
-            display: flex;
-            justify-content: center;
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-        .mini-nav a {
-            color: #5ac8fa;
-            margin: 0 10px;
-            text-decoration: none;
-            font-size: 12px;
-        }
-        .mini-nav a:hover {
-            text-decoration: underline;
-        }
-        .section {
-            max-width: 1000px;
+
+        .main-container {
+            max-width: 1200px;
             margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            border-bottom: 1px solid #333;
-            padding: 40px 20px;
+            padding: 80px 20px 40px;
         }
-        .split-view {
-            display: flex;
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-section h1 {
+            font-size: 36px;
+            color: #5ac8fa;
+            margin-bottom: 10px;
+        }
+
+        .header-section p {
+            font-size: 16px;
+            color: #bbb;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Three column layout */
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 300px 1fr 250px;
             gap: 20px;
-            margin-top: 20px;
+            margin-bottom: 40px;
         }
-        @media (max-width: 800px) {
-            .split-view {
-                flex-direction: column;
+
+        @media (max-width: 1000px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
             }
         }
-        .controls-container {
-            flex: 1;
+
+        /* Left column - Dataset */
+        .dataset-panel {
             background-color: #1e1e1e;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
+            height: fit-content;
         }
-        .visualization-container {
-            flex: 2;
-            background-color: #1e1e1e;
-            border-radius: 8px;
-            padding: 20px;
+
+        .panel-header {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
         }
+
+        .panel-title {
+            font-size: 18px;
+            color: #5ac8fa;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-indicator {
+            background-color: #5ac8fa;
+            color: #121212;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .dataset-options {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dataset-btn {
+            padding: 12px;
+            background-color: #2c2c2e;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dataset-btn:hover {
+            background-color: #3a3a3c;
+            border-color: #5ac8fa;
+        }
+
+        .dataset-btn.active {
+            background-color: #2c5f7c;
+            border-color: #5ac8fa;
+        }
+
+        .dataset-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #1e1e1e;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dataset-info {
+            flex: 1;
+        }
+
+        .dataset-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .dataset-desc {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* Center - Visualization */
+        .visualization-panel {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
         .visualization-box {
             position: relative;
             width: 100%;
-            height: 400px;
+            height: 500px;
             background-color: #2c2c2e;
             border-radius: 8px;
             overflow: hidden;
+            cursor: crosshair;
+            margin-top: 20px;
         }
+
         .scatter-plot {
             position: absolute;
             top: 0;
@@ -155,6 +246,7 @@
             z-index: 2;
             pointer-events: none;
         }
+
         .decision-boundary {
             position: absolute;
             top: 0;
@@ -166,240 +258,474 @@
             background-repeat: no-repeat;
             background-size: cover;
         }
+
         .dot {
             position: absolute;
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             z-index: 3;
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
+
         .dot.class-0 {
             background-color: #5ac8fa;
         }
+
         .dot.class-1 {
             background-color: #ff3b30;
         }
-        .controls {
-            display: grid;
-            gap: 15px;
+
+        /* Right column - Controls */
+        .controls-panel {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
         }
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-bottom: 12px;
+
+        .main-control {
+            margin-bottom: 25px;
         }
-        .slider-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .slider-container input {
-            flex: 1;
-        }
-        .value-display {
-            min-width: 50px;
-            text-align: right;
-            font-size: 14px;
-        }
-        select, input, button {
-            padding: 10px;
-            font-size: 14px;
-            border: none;
-            border-radius: 6px;
+
+        .slider-wrapper {
             background-color: #2c2c2e;
-            color: #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
-        button:hover, select:hover {
-            background-color: #3a3a3c;
-            cursor: pointer;
-        }
-        button:disabled {
-            background-color: #1c1c1e;
-            color: #666;
-            cursor: not-allowed;
-        }
-        h2 {
-            font-size: 22px;
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
         }
-        h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            color: #5ac8fa;
-        }
-        p {
-            font-size: 14px;
-            color: #bbb;
-            line-height: 1.5;
-        }
-        label {
+
+        .slider-label {
             font-size: 14px;
             color: #bbb;
         }
-        .status-message {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #ff9f0a;
-            background-color: #2c2c2e;
-            padding: 10px;
-            border-radius: 6px;
-        }
-        .dataset-controls {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #2c2c2e;
-            border-radius: 8px;
-        }
-        .dataset-controls h3 {
-            margin-top: 0;
-        }
-        .dataset-btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .metrics {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #2c2c2e;
-            border-radius: 8px;
-        }
-        .metrics h3 {
-            margin-top: 0;
-        }
-        .metrics-values {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .metric-item {
-            background-color: #3a3a3c;
-            padding: 10px;
-            border-radius: 6px;
-        }
-        .metric-name {
-            font-size: 12px;
-            color: #bbb;
-        }
-        .metric-value {
+
+        .slider-value {
             font-size: 18px;
             color: #5ac8fa;
             font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #3a3a3c;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #5ac8fa;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #5ac8fa;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .preset-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 11px;
+            background-color: #3a3a3c;
+            border: none;
+            border-radius: 4px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background-color: #5ac8fa;
+            color: #121212;
+        }
+
+        .run-button {
+            width: 100%;
+            padding: 14px;
+            background-color: #5ac8fa;
+            color: #121212;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+
+        .run-button:hover {
+            background-color: #48a4d9;
+        }
+
+        .run-button:disabled {
+            background-color: #3a3a3c;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        /* Metrics display */
+        .metrics-panel {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 800px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .metric-card {
+            background-color: #2c2c2e;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #5ac8fa;
+        }
+
+        /* Interactive hints */
+        .hint-bubble {
+            position: absolute;
+            background-color: #2c5f7c;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+            max-width: 250px;
+        }
+
+        .hint-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hint-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #2c5f7c;
+        }
+
+        /* Advanced controls */
+        .advanced-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .toggle-advanced {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #2c2c2e;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-advanced:hover {
+            background-color: #3a3a3c;
+        }
+
+        .advanced-content {
+            display: none;
+        }
+
+        .advanced-content.show {
+            display: block;
+        }
+
+        /* Info box */
+        .info-box {
+            background-color: #2c5f7c;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-box h4 {
+            margin-top: 0;
+            color: #5ac8fa;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="cool-nav">
-    <a href="/" class="nav-icon">
-        <div class="icon-container">
-            <div class="icon-circle"></div>
-            <svg viewBox="0 0 24 24" class="home-icon">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
+        <a href="/" class="nav-icon">
+            <div class="icon-container">
+                <div class="icon-circle"></div>
+                <svg viewBox="0 0 24 24" class="home-icon">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <span class="nav-text">Home</span>
+        </a>
+    </div>
+
+    <div class="main-container">
+        <div class="header-section">
+            <h1>Understanding Regularization</h1>
+            <p>See how regularization strength affects neural network decision boundaries in real-time</p>
         </div>
-        <span class="nav-text">Home</span>
-    </a>
-</div>
 
-    <div class="section">
-        <h2>Regularization Impact Visualization</h2>
-        <p>This demonstration allows you to explore how regularization affects decision boundaries in binary classification. Adjusting the regularization parameter changes how the model handles the trade-off between fitting the training data and maintaining simplicity.</p>
+        <div class="metrics-panel">
+            <h3 class="panel-title">Model Performance</h3>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Accuracy</div>
+                    <div class="metric-value" id="accuracyValue">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Precision</div>
+                    <div class="metric-value" id="precisionValue">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Recall</div>
+                    <div class="metric-value" id="recallValue">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">F1 Score</div>
+                    <div class="metric-value" id="f1Value">-</div>
+                </div>
+            </div>
+        </div>
 
-        <div class="split-view">
-            <div class="controls-container">
-                <h3>Model Controls</h3>
-                <div class="controls">
-                    <div class="control-group">
-                        <label for="regularizationVal">Regularization Strength (λ):</label>
-                        <div class="slider-container">
-                            <input type="range" id="regularizationVal" min="0.01" max="10" step="0.01" value="1.0">
-                            <span id="regularizationValDisplay" class="value-display">1.0</span>
-                        </div>
-                        <p class="hint">Lower values allow more complex boundaries; higher values enforce simplicity.</p>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="numDataPoints">Number of Data Points:</label>
-                        <div class="slider-container">
-                            <input type="range" id="numDataPoints" min="100" max="1000" step="50" value="200">
-                            <span id="numDataPointsDisplay" class="value-display">200</span>
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="noiseLevel">Noise Level:</label>
-                        <div class="slider-container">
-                            <input type="range" id="noiseLevel" min="0" max="0.2" step="0.01" value="0.03">
-                            <span id="noiseLevelDisplay" class="value-display">0.03</span>
-                        </div>
-                        <p class="hint">Controls the amount of random noise added to the data points.</p>
-                    </div>
-
-                    <button id="runModelBtn">Run Model</button>
+        <div class="content-wrapper">
+            <!-- Left Panel - Dataset Selection -->
+            <div class="dataset-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <span class="step-indicator">1</span>
+                        Choose Dataset
+                    </h3>
                 </div>
 
-                <div class="dataset-controls">
-                    <h3>Dataset Controls</h3>
-                    <p>Select a predefined dataset or create your own by clicking on the visualization area.</p>
+                <div class="dataset-options">
+                    <button class="dataset-btn" id="moonsBtn" onclick="selectDataset('moons')">
+                        <div class="dataset-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5ac8fa" stroke-width="2">
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.8-.1 2.6-.3-3.2-.9-5.6-3.8-5.6-7.2 0-4.1 3.4-7.5 7.5-7.5 1.3 0 2.5.3 3.5.9C18.1 4.5 15.3 2 12 2z"/>
+                            </svg>
+                        </div>
+                        <div class="dataset-info">
+                            <div class="dataset-name">Moons</div>
+                            <div class="dataset-desc">Two interleaving crescents</div>
+                        </div>
+                    </button>
 
-                    <div class="dataset-btn-group">
-                        <button id="moonsDataBtn">Moons</button>
-                        <button id="nonlinearDataBtn">Non-linear</button>
-                        <button id="circularDataBtn">Circular</button>
-                        <button id="clearDataBtn">Clear</button>
-                    </div>
+                    <button class="dataset-btn" id="circularBtn" onclick="selectDataset('circular')">
+                        <div class="dataset-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5ac8fa" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <circle cx="12" cy="12" r="9"/>
+                            </svg>
+                        </div>
+                        <div class="dataset-info">
+                            <div class="dataset-name">Circular</div>
+                            <div class="dataset-desc">Inner circle vs outer ring</div>
+                        </div>
+                    </button>
+
+                    <button class="dataset-btn" id="linearBtn" onclick="selectDataset('linear')">
+                        <div class="dataset-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5ac8fa" stroke-width="2">
+                                <line x1="4" y1="20" x2="20" y2="4"/>
+                                <circle cx="8" cy="8" r="2"/>
+                                <circle cx="16" cy="16" r="2"/>
+                            </svg>
+                        </div>
+                        <div class="dataset-info">
+                            <div class="dataset-name">Linear</div>
+                            <div class="dataset-desc">Linearly separable classes</div>
+                        </div>
+                    </button>
+
+                    <button class="dataset-btn" id="customBtn" onclick="selectDataset('custom')">
+                        <div class="dataset-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5ac8fa" stroke-width="2">
+                                <path d="M12 2v20M2 12h20"/>
+                            </svg>
+                        </div>
+                        <div class="dataset-info">
+                            <div class="dataset-name">Custom</div>
+                            <div class="dataset-desc">Click to add your own points</div>
+                        </div>
+                    </button>
                 </div>
 
-                <div class="metrics">
-                    <h3>Model Metrics</h3>
-                    <div class="metrics-values">
-                        <div class="metric-item">
-                            <div class="metric-name">Accuracy</div>
-                            <div class="metric-value" id="accuracyValue">-</div>
+                <div class="advanced-controls">
+                    <div class="toggle-advanced" onclick="toggleAdvanced()">
+                        <span>Advanced Settings</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="advanced-content" id="advancedSettings">
+                        <div class="control-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 13px; color: #bbb;">Number of Points</label>
+                            <div class="slider-container" style="display: flex; align-items: center; gap: 10px;">
+                                <input type="range" id="numDataPoints" min="50" max="500" step="50" value="200" style="flex: 1;">
+                                <span id="numDataPointsDisplay" style="min-width: 40px; text-align: right; font-size: 14px;">200</span>
+                            </div>
                         </div>
-                        <div class="metric-item">
-                            <div class="metric-name">F1 Score</div>
-                            <div class="metric-value" id="f1Value">-</div>
-                        </div>
-                        <div class="metric-item">
-                            <div class="metric-name">Precision</div>
-                            <div class="metric-value" id="precisionValue">-</div>
-                        </div>
-                        <div class="metric-item">
-                            <div class="metric-name">Recall</div>
-                            <div class="metric-value" id="recallValue">-</div>
+                        <div class="control-group">
+                            <label style="font-size: 13px; color: #bbb;">Noise Level</label>
+                            <div class="slider-container" style="display: flex; align-items: center; gap: 10px;">
+                                <input type="range" id="noiseLevel" min="0" max="0.2" step="0.01" value="0.05" style="flex: 1;">
+                                <span id="noiseLevelDisplay" style="min-width: 40px; text-align: right; font-size: 14px;">0.05</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="status-message" id="statusMessage">Click on the visualization area to add data points. Use shift+click to change class.</div>
             </div>
 
-            <div class="visualization-container">
-                <h3>Classification Visualization</h3>
+            <!-- Center Panel - Visualization -->
+            <div class="visualization-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <span class="step-indicator">2</span>
+                        Visualization
+                    </h3>
+                </div>
+
+                <div class="info-box">
+                    <h4>What am I looking at?</h4>
+                    <p>• <span style="color: #5ac8fa;">Blue dots</span> and <span style="color: #ff3b30;">red dots</span> represent two different classes</p>
+                    <p>• The colored background shows the model's decision boundary</p>
+                    <p>• Adjust regularization to see how the boundary changes</p>
+                </div>
+
                 <div class="visualization-box" id="visualizationBox">
                     <div class="decision-boundary" id="decisionBoundary"></div>
                     <div class="scatter-plot" id="scatterPlot"></div>
+                    <div class="hint-bubble" id="vizHint">Click anywhere to add custom data points</div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Controls -->
+            <div class="controls-panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <span class="step-indicator">3</span>
+                        Adjust & Run
+                    </h3>
+                </div>
+
+                <div class="main-control">
+                    <div class="slider-wrapper">
+                        <div class="slider-header">
+                            <span class="slider-label">Regularization (λ)</span>
+                            <span class="slider-value" id="regularizationValDisplay">1.00</span>
+                        </div>
+                        <input type="range" id="regularizationVal" min="0.001" max="10" step="0.001" value="1.0" style="background: linear-gradient(to right, #ff3b30 0%, #ff9f0a 50%, #4cd964 100%);">
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="setRegularization(0.001)">Very Low</button>
+                            <button class="preset-btn" onclick="setRegularization(0.1)">Low</button>
+                            <button class="preset-btn" onclick="setRegularization(1.0)">Medium</button>
+                            <button class="preset-btn" onclick="setRegularization(10)">High</button>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #888; margin-top: 10px; line-height: 1.5;">
+                        <p style="margin: 5px 0;"><strong>Low λ:</strong> Complex boundary, may overfit</p>
+                        <p style="margin: 5px 0;"><strong>High λ:</strong> Simple boundary, may underfit</p>
+                    </div>
+                </div>
+
+                <button id="runModelBtn" class="run-button">Run Model</button>
+
+                <div id="statusMessage" style="margin-top: 15px; font-size: 13px; text-align: center; color: #888;">
+                    Select a dataset to begin
                 </div>
             </div>
         </div>
 
-        <div style="margin-top: 30px;">
-            <h3>About Regularization</h3>
-            <p>Regularization is a technique used to prevent overfitting in machine learning models by adding a penalty term to the loss function based on the complexity of the model parameters.</p>
-            <p>Key concepts:</p>
-            <ul style="color: #bbb; font-size: 14px; line-height: 1.5;">
-                <li><strong>Overfitting:</strong> When a model learns the training data too well, including noise and outliers, leading to poor generalization on new data.</li>
-                <li><strong>L1 Regularization (Lasso):</strong> Adds a penalty equal to the absolute value of the weights, which can lead to sparse models by driving some weights to exactly zero.</li>
-                <li><strong>L2 Regularization (Ridge):</strong> Adds a penalty equal to the square of the weights, which prevents any weight from becoming too large and typically leads to more stable solutions.</li>
-                <li><strong>Regularization Strength (λ):</strong> Controls the trade-off between fitting the training data perfectly (low λ) and keeping the model weights small (high λ).</li>
-            </ul>
-            <p>In the visualization above, higher regularization values lead to smoother, simpler decision boundaries, while lower values allow more complex boundaries that may fit the training data better but risk overfitting.</p>
+        <div style="margin-top: 40px; background-color: #1e1e1e; border-radius: 12px; padding: 30px;">
+            <h3 style="color: #5ac8fa; margin-bottom: 20px;">Understanding Regularization</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div>
+                    <h4 style="color: #ff3b30; font-size: 16px;">Low Regularization (λ ≈ 0)</h4>
+                    <p style="font-size: 14px; color: #bbb; line-height: 1.6;">
+                        The model has more freedom to fit the training data closely. This can lead to complex, wiggly decision boundaries that perfectly separate the training points but may not generalize well to new data.
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: #ff9f0a; font-size: 16px;">Medium Regularization (λ ≈ 1)</h4>
+                    <p style="font-size: 14px; color: #bbb; line-height: 1.6;">
+                        A balanced approach that prevents overfitting while still allowing the model to capture important patterns. The decision boundary is smoother but still follows the data structure.
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: #4cd964; font-size: 16px;">High Regularization (λ ≫ 1)</h4>
+                    <p style="font-size: 14px; color: #bbb; line-height: 1.6;">
+                        The model is strongly constrained, leading to very simple decision boundaries. While this prevents overfitting, it might miss important patterns in the data (underfitting).
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -415,33 +741,30 @@
         const noiseLevelSlider = document.getElementById('noiseLevel');
         const noiseLevelDisplay = document.getElementById('noiseLevelDisplay');
         const runModelBtn = document.getElementById('runModelBtn');
-        const moonsDataBtn = document.getElementById('moonsDataBtn');
-        const nonlinearDataBtn = document.getElementById('nonlinearDataBtn');
-        const circularDataBtn = document.getElementById('circularDataBtn');
-        const clearDataBtn = document.getElementById('clearDataBtn');
         const statusMessage = document.getElementById('statusMessage');
         const accuracyValue = document.getElementById('accuracyValue');
         const f1Value = document.getElementById('f1Value');
         const precisionValue = document.getElementById('precisionValue');
         const recallValue = document.getElementById('recallValue');
+        const vizHint = document.getElementById('vizHint');
 
         // Data storage
         let dataPoints = [];
         let classLabels = [];
+        let currentDataset = null;
+        let isFirstRun = true;
 
         // Initialize
         function init() {
-            // Set up the regularization slider
+            // Set up sliders
             regularizationSlider.addEventListener('input', function() {
-                regularizationDisplay.textContent = parseFloat(this.value).toFixed(2);
+                regularizationDisplay.textContent = parseFloat(this.value).toFixed(3);
             });
 
-            // Set up the data points slider
             numDataPointsSlider.addEventListener('input', function() {
                 numDataPointsDisplay.textContent = this.value;
             });
 
-            // Set up the noise level slider
             noiseLevelSlider.addEventListener('input', function() {
                 noiseLevelDisplay.textContent = parseFloat(this.value).toFixed(2);
             });
@@ -449,56 +772,89 @@
             // Set up run button
             runModelBtn.addEventListener('click', runModel);
 
-            // Set up dataset buttons
-            moonsDataBtn.addEventListener('click', generateMoonsData);
-            nonlinearDataBtn.addEventListener('click', generateNonlinearData);
-            circularDataBtn.addEventListener('click', generateCircularData);
-            clearDataBtn.addEventListener('click', clearData);
-
-            // Set up visualization click handler for adding points
+            // Set up visualization click handler
             visualizationBox.addEventListener('click', function(e) {
-                if (e.target === visualizationBox || e.target === scatterPlot || e.target === decisionBoundary) {
+                if (currentDataset === 'custom' && (e.target === visualizationBox || e.target === scatterPlot || e.target === decisionBoundary)) {
                     addDataPoint(e);
                 }
             });
 
-            // Initial status and button state
-            updateStatus('Click on the visualization area to add data points. Use shift+click to change class.');
-            runModelBtn.disabled = true;
+            // Show hint on hover for custom dataset
+            visualizationBox.addEventListener('mouseenter', function() {
+                if (currentDataset === 'custom' && dataPoints.length < 10) {
+                    vizHint.classList.add('show');
+                }
+            });
+
+            visualizationBox.addEventListener('mouseleave', function() {
+                vizHint.classList.remove('show');
+            });
+
+            // Load default dataset
+            setTimeout(() => {
+                selectDataset('moons');
+            }, 500);
         }
 
-        // Add a data point when clicking on the visualization
-        function addDataPoint(event) {
-            const rect = visualizationBox.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
+        // Dataset selection
+        function selectDataset(dataset) {
+            // Update UI
+            document.querySelectorAll('.dataset-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(dataset + 'Btn').classList.add('active');
 
-            // Normalize coordinates to [0, 1] range
-            const normalizedX = x / rect.width;
-            const normalizedY = y / rect.height;
+            currentDataset = dataset;
+            clearData();
 
-            // Determine class based on shift key
-            const pointClass = event.shiftKey ? 1 : 0;
+            if (dataset === 'custom') {
+                statusMessage.textContent = 'Click on the visualization to add points. Shift+click for red class.';
+                statusMessage.style.color = '#ff9f0a';
+                vizHint.textContent = 'Click to add blue points, Shift+click for red points';
+            } else {
+                statusMessage.textContent = 'Generating dataset...';
+                statusMessage.style.color = '#ff9f0a';
 
-            // Add to data
-            dataPoints.push([normalizedX, normalizedY]);
-            classLabels.push(pointClass);
+                setTimeout(() => {
+                    switch(dataset) {
+                        case 'moons':
+                            generateMoonsData();
+                            break;
+                        case 'circular':
+                            generateCircularData();
+                            break;
+                        case 'linear':
+                            generateLinearData();
+                            break;
+                    }
 
-            // Create visual dot
-            const dot = document.createElement('div');
-            dot.className = `dot class-${pointClass}`;
-            dot.style.left = `${x}px`;
-            dot.style.top = `${y}px`;
-            scatterPlot.appendChild(dot);
-
-            // Update run button state
-            updateRunButtonState();
-
-            // Update status
-            updateStatus(`Added point at (${normalizedX.toFixed(2)}, ${normalizedY.toFixed(2)}) with class ${pointClass}. Total points: ${dataPoints.length}`);
+                    // Auto-run on first dataset or if switching datasets
+                    if (isFirstRun || dataPoints.length > 0) {
+                        setTimeout(() => {
+                            runModel();
+                            isFirstRun = false;
+                        }, 300);
+                    }
+                }, 100);
+            }
         }
 
-        // Generate moons dataset (two interleaving half circles)
+        // Set regularization value
+        function setRegularization(value) {
+            regularizationSlider.value = value;
+            regularizationDisplay.textContent = value.toFixed(3);
+
+            // Auto-run if we have data
+            if (dataPoints.length > 0) {
+                runModel();
+            }
+        }
+
+        // Toggle advanced settings
+        function toggleAdvanced() {
+            const advancedContent = document.getElementById('advancedSettings');
+            advancedContent.classList.toggle('show');
+        }
+
+        // Generate datasets
         function generateMoonsData() {
             clearData();
 
@@ -507,21 +863,19 @@
             const pointsPerClass = Math.floor(numPoints / 2);
 
             // Center coordinates for the two half circles
-            const center1X = 0.4;
+            const center1X = 0.35;
             const center1Y = 0.5;
-            const center2X = 0.6;
+            const center2X = 0.65;
             const center2Y = 0.5;
-            const radius = 0.25;
+            const radius = 0.3;
 
             // Class 0 - bottom half circle
             for (let i = 0; i < pointsPerClass; i++) {
-                // Angle from 0 to π (bottom half)
                 const angle = Math.PI + Math.random() * Math.PI;
-                const r = radius * (0.8 + Math.random() * 0.4); // Some variation in radius
+                const r = radius * (0.8 + Math.random() * 0.4);
                 const x = center1X + r * Math.cos(angle);
                 const y = center1Y + r * Math.sin(angle);
 
-                // Add noise based on noise level
                 const noiseX = (Math.random() - 0.5) * noiseLevel;
                 const noiseY = (Math.random() - 0.5) * noiseLevel;
 
@@ -534,13 +888,11 @@
 
             // Class 1 - top half circle
             for (let i = 0; i < pointsPerClass; i++) {
-                // Angle from π to 2π (top half)
                 const angle = Math.random() * Math.PI;
-                const r = radius * (0.8 + Math.random() * 0.4); // Some variation in radius
+                const r = radius * (0.8 + Math.random() * 0.4);
                 const x = center2X + r * Math.cos(angle);
                 const y = center2Y + r * Math.sin(angle);
 
-                // Add noise based on noise level
                 const noiseX = (Math.random() - 0.5) * noiseLevel;
                 const noiseY = (Math.random() - 0.5) * noiseLevel;
 
@@ -551,76 +903,17 @@
                 );
             }
 
-            updateStatus(`Generated moons dataset with ${numPoints} points and noise level ${noiseLevel.toFixed(2)}.`);
+            statusMessage.textContent = 'Dataset ready. Adjust regularization and click "Run Model"';
+            statusMessage.style.color = '#4cd964';
         }
 
-        // Generate non-linear separable data
-        function generateNonlinearData() {
-            clearData();
-
-            const numPoints = parseInt(numDataPointsSlider.value);
-            const noiseLevel = parseFloat(noiseLevelSlider.value);
-            const sidePoints = Math.floor(numPoints * 0.25); // 25% for each side
-            const centerPoints = numPoints - (sidePoints * 2); // Rest for center
-
-            // Class 0 - left and right sides
-            for (let i = 0; i < sidePoints; i++) {
-                const x = 0.1 + Math.random() * 0.2;
-                const y = 0.2 + Math.random() * 0.6;
-
-                // Add noise based on noise level
-                const noiseX = (Math.random() - 0.5) * noiseLevel;
-                const noiseY = (Math.random() - 0.5) * noiseLevel;
-
-                addPointToVisualization(
-                    Math.max(0, Math.min(1, x + noiseX)),
-                    Math.max(0, Math.min(1, y + noiseY)),
-                    0
-                );
-            }
-
-            for (let i = 0; i < sidePoints; i++) {
-                const x = 0.7 + Math.random() * 0.2;
-                const y = 0.2 + Math.random() * 0.6;
-
-                // Add noise based on noise level
-                const noiseX = (Math.random() - 0.5) * noiseLevel;
-                const noiseY = (Math.random() - 0.5) * noiseLevel;
-
-                addPointToVisualization(
-                    Math.max(0, Math.min(1, x + noiseX)),
-                    Math.max(0, Math.min(1, y + noiseY)),
-                    0
-                );
-            }
-
-            // Class 1 - middle
-            for (let i = 0; i < centerPoints; i++) {
-                const x = 0.35 + Math.random() * 0.3;
-                const y = 0.2 + Math.random() * 0.6;
-
-                // Add noise based on noise level
-                const noiseX = (Math.random() - 0.5) * noiseLevel;
-                const noiseY = (Math.random() - 0.5) * noiseLevel;
-
-                addPointToVisualization(
-                    Math.max(0, Math.min(1, x + noiseX)),
-                    Math.max(0, Math.min(1, y + noiseY)),
-                    1
-                );
-            }
-
-            updateStatus(`Generated non-linear dataset with ${numPoints} points and noise level ${noiseLevel.toFixed(2)}.`);
-        }
-
-        // Generate circular data pattern
         function generateCircularData() {
             clearData();
 
             const numPoints = parseInt(numDataPointsSlider.value);
             const noiseLevel = parseFloat(noiseLevelSlider.value);
-            const innerPoints = Math.floor(numPoints * 0.4); // 40% for inner circle
-            const outerPoints = numPoints - innerPoints; // 60% for outer ring
+            const innerPoints = Math.floor(numPoints * 0.4);
+            const outerPoints = numPoints - innerPoints;
 
             const centerX = 0.5;
             const centerY = 0.5;
@@ -628,11 +921,10 @@
             // Class 0 - inner circle
             for (let i = 0; i < innerPoints; i++) {
                 const angle = Math.random() * 2 * Math.PI;
-                const radius = Math.random() * 0.15;
+                const radius = Math.random() * 0.2;
                 const x = centerX + radius * Math.cos(angle);
                 const y = centerY + radius * Math.sin(angle);
 
-                // Add noise based on noise level
                 const noiseX = (Math.random() - 0.5) * noiseLevel;
                 const noiseY = (Math.random() - 0.5) * noiseLevel;
 
@@ -646,11 +938,10 @@
             // Class 1 - outer ring
             for (let i = 0; i < outerPoints; i++) {
                 const angle = Math.random() * 2 * Math.PI;
-                const radius = 0.25 + Math.random() * 0.15;
+                const radius = 0.3 + Math.random() * 0.15;
                 const x = centerX + radius * Math.cos(angle);
                 const y = centerY + radius * Math.sin(angle);
 
-                // Add noise based on noise level
                 const noiseX = (Math.random() - 0.5) * noiseLevel;
                 const noiseY = (Math.random() - 0.5) * noiseLevel;
 
@@ -661,35 +952,104 @@
                 );
             }
 
-            updateStatus(`Generated circular dataset with ${numPoints} points and noise level ${noiseLevel.toFixed(2)}.`);
+            statusMessage.textContent = 'Dataset ready. Adjust regularization and click "Run Model"';
+            statusMessage.style.color = '#4cd964';
         }
 
-        // Helper function to add a point to the visualization with normalized coordinates
-        function addPointToVisualization(normalizedX, normalizedY, pointClass) {
-            // Add to data arrays
+        function generateLinearData() {
+            clearData();
+
+            const numPoints = parseInt(numDataPointsSlider.value);
+            const noiseLevel = parseFloat(noiseLevelSlider.value);
+            const pointsPerClass = Math.floor(numPoints / 2);
+
+            // Generate linearly separable data
+            for (let i = 0; i < pointsPerClass; i++) {
+                const x = Math.random();
+                const y = Math.random();
+
+                // Class 0 - below diagonal
+                if (y < x - 0.1) {
+                    const noiseX = (Math.random() - 0.5) * noiseLevel;
+                    const noiseY = (Math.random() - 0.5) * noiseLevel;
+
+                    addPointToVisualization(
+                        Math.max(0, Math.min(1, x + noiseX)),
+                        Math.max(0, Math.min(1, y + noiseY)),
+                        0
+                    );
+                } else {
+                    i--; // Retry
+                }
+            }
+
+            // Class 1 - above diagonal
+            for (let i = 0; i < pointsPerClass; i++) {
+                const x = Math.random();
+                const y = Math.random();
+
+                if (y > x + 0.1) {
+                    const noiseX = (Math.random() - 0.5) * noiseLevel;
+                    const noiseY = (Math.random() - 0.5) * noiseLevel;
+
+                    addPointToVisualization(
+                        Math.max(0, Math.min(1, x + noiseX)),
+                        Math.max(0, Math.min(1, y + noiseY)),
+                        1
+                    );
+                } else {
+                    i--; // Retry
+                }
+            }
+
+            statusMessage.textContent = 'Dataset ready. Adjust regularization and click "Run Model"';
+            statusMessage.style.color = '#4cd964';
+        }
+
+        // Add data point
+        function addDataPoint(event) {
+            const rect = visualizationBox.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const normalizedX = x / rect.width;
+            const normalizedY = y / rect.height;
+
+            const pointClass = event.shiftKey ? 1 : 0;
+
             dataPoints.push([normalizedX, normalizedY]);
             classLabels.push(pointClass);
 
-            // Get pixel coordinates for display
+            const dot = document.createElement('div');
+            dot.className = `dot class-${pointClass}`;
+            dot.style.left = `${x}px`;
+            dot.style.top = `${y}px`;
+            scatterPlot.appendChild(dot);
+
+            updateRunButtonState();
+        }
+
+        // Add point to visualization (helper function)
+        function addPointToVisualization(normalizedX, normalizedY, pointClass) {
+            dataPoints.push([normalizedX, normalizedY]);
+            classLabels.push(pointClass);
+
             const boxWidth = visualizationBox.offsetWidth;
             const boxHeight = visualizationBox.offsetHeight;
             const pixelX = normalizedX * boxWidth;
             const pixelY = normalizedY * boxHeight;
 
-            // Create visual dot
             const dot = document.createElement('div');
             dot.className = `dot class-${pointClass}`;
             dot.style.left = `${pixelX}px`;
             dot.style.top = `${pixelY}px`;
             scatterPlot.appendChild(dot);
 
-            // Enable run button if we have points from both classes
             updateRunButtonState();
         }
 
-        // Update run button state based on available data
+        // Update run button state
         function updateRunButtonState() {
-            // Need at least 2 points and at least one from each class
             const hasEnoughPoints = dataPoints.length >= 2;
             const hasClass0 = classLabels.includes(0);
             const hasClass1 = classLabels.includes(1);
@@ -697,63 +1057,52 @@
             runModelBtn.disabled = !(hasEnoughPoints && hasClass0 && hasClass1);
         }
 
-        // Clear all data
+        // Clear data
         function clearData() {
-            // Clear arrays
             dataPoints = [];
             classLabels = [];
 
-            // Clear visual dots
             while (scatterPlot.firstChild) {
                 scatterPlot.removeChild(scatterPlot.firstChild);
             }
 
-            // Clear decision boundary
             decisionBoundary.style.backgroundImage = 'none';
 
-            // Reset metrics
             accuracyValue.textContent = '-';
             f1Value.textContent = '-';
             precisionValue.textContent = '-';
             recallValue.textContent = '-';
 
-            // Disable run button
             runModelBtn.disabled = true;
-
-            updateStatus('Data cleared. Add new points or select a predefined dataset.');
         }
 
-        // Update status message
-        function updateStatus(message) {
-            statusMessage.textContent = message;
-        }
-
-        // Run the model with current parameters
+        // Run model
         async function runModel() {
             if (dataPoints.length < 2) {
-                updateStatus('Need at least two data points to run a model.');
+                statusMessage.textContent = 'Need at least two data points to run a model.';
+                statusMessage.style.color = '#ff3b30';
                 return;
             }
 
             if (classLabels.indexOf(0) === -1 || classLabels.indexOf(1) === -1) {
-                updateStatus('Need at least one point from each class.');
+                statusMessage.textContent = 'Need at least one point from each class.';
+                statusMessage.style.color = '#ff3b30';
                 return;
             }
 
-            updateStatus('Running model...');
+            statusMessage.textContent = 'Training neural network...';
+            statusMessage.style.color = '#ff9f0a';
             runModelBtn.disabled = true;
 
             try {
                 const regularizationValue = parseFloat(regularizationSlider.value);
 
-                // Prepare data for server
                 const payload = {
                     regularization: regularizationValue,
                     data: dataPoints,
                     class: classLabels
                 };
 
-                // Send to server
                 const response = await fetch('/process_regularization', {
                     method: 'POST',
                     headers: {
@@ -767,55 +1116,51 @@
                 }
 
                 const result = await response.json();
-                console.log("Received result from server:", {
-                    message: result.message,
-                    hasImage: !!result.boundary_image,
-                    imageLength: result.boundary_image ? result.boundary_image.length : 0,
-                    metrics: result.metrics
-                });
 
-                // Update decision boundary visualization
                 if (result.boundary_image) {
-                    // Set the decision boundary image
                     const imgData = result.boundary_image;
-                    console.log("Setting boundary image, data starts with:", imgData.substring(0, 30) + "...");
-
                     decisionBoundary.style.backgroundImage = `url(data:image/png;base64,${imgData})`;
                     decisionBoundary.style.backgroundSize = 'cover';
                     decisionBoundary.style.backgroundPosition = 'center';
                     decisionBoundary.style.backgroundRepeat = 'no-repeat';
-
-                    // For debugging - try creating an actual img element to verify the image data works
-                    const testImg = document.createElement('img');
-                    testImg.src = `data:image/png;base64,${imgData}`;
-                    testImg.style.display = 'none';
-                    testImg.onload = () => console.log("Image loaded successfully!");
-                    testImg.onerror = (e) => console.error("Image failed to load:", e);
-                    document.body.appendChild(testImg);
-
-                    console.log("Background image style set:", decisionBoundary.style.backgroundImage.substring(0, 50) + "...");
-                } else {
-                    console.warn("No boundary image received from server.");
                 }
 
-                // Update metrics
                 if (result.metrics) {
-                    accuracyValue.textContent = result.metrics.accuracy.toFixed(3);
+                    accuracyValue.textContent = (result.metrics.accuracy * 100).toFixed(1) + '%';
                     f1Value.textContent = result.metrics.f1.toFixed(3);
                     precisionValue.textContent = result.metrics.precision.toFixed(3);
                     recallValue.textContent = result.metrics.recall.toFixed(3);
+
+                    // Color code accuracy
+                    const accuracy = result.metrics.accuracy;
+                    if (accuracy >= 0.9) {
+                        accuracyValue.style.color = '#4cd964';
+                    } else if (accuracy >= 0.7) {
+                        accuracyValue.style.color = '#ff9f0a';
+                    } else {
+                        accuracyValue.style.color = '#ff3b30';
+                    }
                 }
 
-                updateStatus(`Model ran successfully with λ=${regularizationValue.toFixed(2)}`);
+                const regDescription = regularizationValue < 0.01 ? 'Very low λ: Complex boundary' :
+                                     regularizationValue < 0.1 ? 'Low λ: Flexible boundary' :
+                                     regularizationValue < 1 ? 'Medium λ: Balanced boundary' :
+                                     regularizationValue < 5 ? 'High λ: Simple boundary' :
+                                     'Very high λ: Very simple boundary';
+
+                statusMessage.textContent = `Model trained! ${regDescription}`;
+                statusMessage.style.color = '#4cd964';
             } catch (error) {
                 console.error('Error running model:', error);
-                updateStatus(`Error: ${error.message}`);
+                statusMessage.textContent = `Error: ${error.message}`;
+                statusMessage.style.color = '#ff3b30';
             } finally {
                 runModelBtn.disabled = false;
+                updateRunButtonState();
             }
         }
 
-        // Initialize the page
+        // Start when page loads
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
