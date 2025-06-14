@@ -184,7 +184,7 @@ def sound_radar(data: Dict[str, Any]):
 
 def image_compression(data: Dict[str, Any]):
     sample_name = data.get('image_name', 'lena')
-    image: Image = data_base.download_image_sample(sample_name=sample_name)
+    image_size, image = data_base.download_image_sample(sample_name=sample_name) #type: float, Image
 
     if image is None:
         return jsonify({
@@ -215,13 +215,12 @@ def image_compression(data: Dict[str, Any]):
     # Convert numpy array to PIL Image
     compressed_pil_image = Image.fromarray(compressed_image.astype(np.uint8))
 
-    # Convert to RGB if it's grayscale (L mode)
-    if compressed_pil_image.mode != 'RGB':
-        compressed_pil_image = compressed_pil_image.convert('RGB')
+    if compressed_pil_image.mode != 'L':
+        compressed_pil_image = compressed_pil_image.convert('L')
 
     # Save to buffer
     compressed_img_buffer = io.BytesIO()
-    compressed_pil_image.save(compressed_img_buffer, format='JPEG', quality=95)
+    compressed_pil_image.save(compressed_img_buffer, format='JPEG', quality=40)
     compressed_img_buffer.seek(0)
 
     timestamp = int(time.time())
@@ -240,7 +239,6 @@ def image_compression(data: Dict[str, Any]):
         }), 500
 
     # Calculate sizes properly
-    original_size = len(compressed_img_buffer.getvalue()) / 1024  # KB
     compressed_size = len(compressed_img_buffer.getvalue()) / 1024  # KB
     compression_ratio = 1.0
 
@@ -260,7 +258,7 @@ def image_compression(data: Dict[str, Any]):
         "compressed_image_url": compressed_url,
         "frequency_domain_url": '',
         "coefficients_image_url": '',
-        "original_size": original_size,
+        "original_size": image_size,
         "compressed_size": compressed_size,
         "compression_ratio": compression_ratio,
         "psnr": psnr

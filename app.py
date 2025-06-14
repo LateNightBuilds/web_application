@@ -1,4 +1,7 @@
 import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'algorithms')))
 
 from flask import Flask, render_template, request, jsonify
 
@@ -6,7 +9,8 @@ from src.graph_manager import (shortest_path_algorithm,
                                graph_search_algorithm,
                                minimum_spanning_tree)
 from src.machine_learning_manager import regularization_impact
-from src.optimization_manager import simulated_annealing_tsp
+from src.optimization_manager import (simulated_annealing_tsp,
+                                      gradient_descent_optimization)
 from src.signal_processing_manager import (fast_fourier_transform,
                                            generate_signal,
                                            load_sample,
@@ -81,6 +85,11 @@ def regularization_page():
 @app.route('/simulated_annealing')
 def simulated_annealing_page():
     return render_template('simulated_annealing.html')
+
+
+@app.route('/gradient_descent')
+def gradient_descent_page():
+    return render_template('gradient_descent.html')
 
 
 @app.route('/update', methods=['POST'])
@@ -238,6 +247,18 @@ def handle_run_simulated_annealing_tsp():
 
     except Exception as e:
         print(f"Error in regularization processing: {str(e)}")
+        return jsonify({"message": f"Error: {str(e)}"}), 500
+
+
+@app.route('/gradient_descent/optimize', methods=['POST'])
+def handle_gradient_descent():
+    try:
+        data = request.get_json()
+        json_file = gradient_descent_optimization(data=data)
+        return json_file
+
+    except Exception as e:
+        print(f"Error in gradient descent optimization: {str(e)}")
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
 

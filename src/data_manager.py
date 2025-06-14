@@ -33,7 +33,7 @@ class DataManager:
         sample_rate, audio_data = wavfile.read(audio_bytes)
         return sample_rate, audio_data
 
-    def download_image_sample(self, sample_name: str) -> None | Image.Image:
+    def download_image_sample(self, sample_name: str) -> None | Tuple[float, Image.Image]:
         if not self.client:
             return None
 
@@ -41,7 +41,8 @@ class DataManager:
                                                                                f'{sample_name}.jpg')
         image_bytes = io.BytesIO(response)
         image = Image.open(image_bytes)
-        return image
+        image_file_size = len(image_bytes.getvalue()) / 1024  # KB
+        return image_file_size, image
 
     def upload_image(self, file: bytes, folder_name: str, file_name: str):
         if not self.client:
